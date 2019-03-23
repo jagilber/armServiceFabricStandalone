@@ -5,7 +5,10 @@ param(
     [string[]]$nodes,
     [string]$commonName,
     [string]$transcript,
-    [string]$sfPackageUrl
+    [string]$sfPackageUrl,
+    [string]$azureClientId,
+    [string]$azureSecret,
+    [string]$azureTenant
 )
 
 $configurationData = @{
@@ -29,7 +32,10 @@ configuration SFStandaloneInstall
         [string[]]$nodes,
         [string]$commonname,
         [string]$transcript = ".\transcript.log",
-        [string]$sfPackageUrl
+        [string]$sfPackageUrl,
+        [string]$azureClientId,
+        [string]$azureSecret,
+        [string]$azureTenant
     )
     
     $ErrorActionPreference = "silentlycontinue"
@@ -91,7 +97,14 @@ configuration SFStandaloneInstall
             }
             SetScript = { 
                     write-host "powershell.exe -file $using:installScript -thumbprint $using:thumbprint -nodes $using:nodes -commonname $using:commonname -sfpackageurl $using:sfPackageUrl"
-                    $result = Invoke-Expression -Command ("powershell.exe -file $using:installScript -thumbprint $using:thumbprint -nodes $using:nodes -commonname $using:commonname -sfpackageurl $using:sfPackageUrl") -Verbose -Debug
+                    $result = Invoke-Expression -Command ("powershell.exe -file $using:installScript" `
+                        + "-thumbprint $using:thumbprint" `
+                        + "-nodes $using:nodes" `
+                        + "-commonname $using:commonname" `
+                        + "-sfpackageurl $using:sfPackageUrl" `
+                        + "-azureClientId $using:azureClientId" `
+                        + "-azureSecret $using:azureSecret" `
+                        + "-azureTenant $using:azureTenant") -Verbose -Debug
                     write-host "invoke result: $result"
                     
                     @{ Result = $result}
@@ -128,6 +141,9 @@ if($thumbprint -and $nodes -and $commonName)
         -nodes $nodes `
         -commonname $commonName `
         -sfpackageurl $sfPackageUrl `
+        -azureClientId $azureClientId `
+        -azureSecret $azureSecret `
+        -azureTenant $azureTenant `
         -ConfigurationData $configurationData
 
     # Start-DscConfiguration .\SFStandaloneInstall -wait -force -debug -verbose

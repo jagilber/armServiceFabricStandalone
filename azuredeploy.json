@@ -2,6 +2,27 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "azureClientId": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "optional: azure client id to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
+      }
+    },
+    "azureSecret": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "optional: azure client id secret to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
+      }
+    },
+    "azureTenant": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "optional: azure tenant to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
+      }
+    },
     "sfPackageUrl": {
       "defaultValue": "https://go.microsoft.com/fwlink/?LinkId=730690",
       "type": "string"
@@ -11,7 +32,7 @@
       "type": "string"
     },
     "nodes": {
-      "defaultValue": "",
+      "defaultValue": "\"nt0000000,nt0000001,nt0000002,nt0000003,nt0000004\"",
       "type": "string"
     },
     "fileUris": {
@@ -274,7 +295,10 @@
                 "thumbprint": "[parameters('certificateThumbprint')]",
                 "nodes": "[parameters('nodes')]",
                 "commonName": "[parameters('certificateCommonName')]",
-                "sfPackageUrl": "[parameters('sfPackageUrl')]"
+                "sfPackageUrl": "[parameters('sfPackageUrl')]",
+                "azureClientId": "[parameters('azureClientId')]",
+                "azureSecret": "[parameters('azureSecret')]",
+                "azureTenant": "[parameters('azureTenant')]"
               },
               "privacy": {
                 "dataCollection": "enable"

@@ -11,8 +11,9 @@ param(
     [string]$thumbprint,
     [string[]]$nodes,
     [string]$commonname,
-    [string]$adminUsername,
-    [string]$adminPassword,
+    [string]$azureClientId,
+    [string]$azureSecret,
+    [string]$azureTenant,
     [string]$diagnosticShare,
     [switch]$remove,
     [switch]$force,
@@ -25,7 +26,6 @@ param(
 
 $erroractionpreference = "continue"
 $logFile = $null
-$jobName = "sa"
 
 function main()
 {
@@ -34,7 +34,6 @@ function main()
     $packagePath = "$psscriptroot\$([io.path]::GetFileNameWithoutExtension($packageName))"
     $packageZip = "$psscriptroot\$packageName"
     $logFile = "$psscriptroot\install.log"
-    $certPath = "$packagePath\Certificates"
     $currentLocation = (get-location).Path
     $configurationFileMod = "$([io.path]::GetFileNameWithoutExtension($configurationFile)).mod.json"
     log-info "-------------------------------"
@@ -84,7 +83,7 @@ function main()
 
     # enable remoting
     log-info "disable firewall"
-    # todo disaable only sf ports?
+    # todo disable only sf ports?
     set-netFirewallProfile -Profile Domain,Public,Private -Enabled False
     log-info "enable remoting"
     enable-psremoting
@@ -94,6 +93,14 @@ function main()
     #winrm id -r:%machinename%
     #winrm set winrm/config/client '@{TrustedHosts="*"}'
     winrm set winrm/config/client '@{TrustedHosts="<local>"}'
+
+
+    # if creds supplied, download cert and put into currentuser my store for cluster admin
+    if($azureClientId -and $azureSecret -and $azureTenant)
+    {
+        log-info "downloading cert from store"
+        download-kvCert
+    }
 
     # read and modify config with thumb and nodes if first node
     $nodes = $nodes.split(',')
@@ -107,11 +114,14 @@ function main()
         finish-script
         return
     }
-<#
+
+    <#
+    # todo needed?
     log-info "start sleeping $($timeout / 4) seconds"
     start-sleep -seconds ($timeout / 4)
     log-info "resuming"
-#>
+    #>
+
     if ($force -and (test-path $packagePath))
     {
         log-info "deleting package"
@@ -216,6 +226,54 @@ function main()
     }
 
     return $false
+}
+
+function download-kvCert()
+{
+    #  requires WMF 5.0
+    #  verify NuGet package
+    #
+    $nuget = get-packageprovider nuget -Force
+    if (-not $nuget -or ($nuget.Version -lt 2.8.5.22))
+    {
+        log-info "installing nuget package..."
+        install-packageprovider -name NuGet -minimumversion 2.8.5.201 -force
+    }
+
+    #  install AzureRM module
+    #  min need AzureRM.profile, AzureRM.KeyVault
+    #
+    if (-not (get-module AzureRM -ListAvailable))
+    { 
+        log-info "installing AzureRm powershell module..." 
+        install-module AzureRM -force 
+    } 
+
+    #  log onto azure account
+    #
+    log-info "logging onto azure account with app id = $azureClientId ..."
+
+    $creds = new-object Management.Automation.PSCredential ($azureClientId, (convertto-securestring $azureSecret -asplaintext -force))
+    login-azurermaccount -credential $creds -serviceprincipal -tenantid $azureTenant -confirm:$false
+
+    #  get the secret from key vault
+    #
+    log-info "getting secret '$secretName' from keyvault '$vaultName'..."
+    $secret = get-azurekeyvaultsecret -vaultname $vaultName -name $secretName
+
+    $certCollection = New-Object Security.Cryptography.X509Certificates.X509Certificate2Collection
+
+    $bytes = [convert]::FromBase64String($secret.SecretValueText)
+    $certCollection.Import($bytes, $null, [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
+        
+    add-type -AssemblyName System.Web
+    $password = [Web.Security.Membership]::GeneratePassword(38, 5)
+    $protectedCertificateBytes = $certCollection.Export([Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12, $password)
+
+    $pfxFilePath = join-path $PSScriptRoot "$([guid]::NewGuid()).pfx"
+    log-info "writing the cert as '$pfxFilePath'..."
+    [io.file]::WriteAllBytes($pfxFilePath, $protectedCertificateBytes)
+
 }
 
 function log-info($data)
