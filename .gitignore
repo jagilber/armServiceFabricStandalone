@@ -260,5 +260,6 @@ paket-files/
 __pycache__/
 *.pyc
 
-# afVmPowerMonitor
+# armServiceFabricStandalone
 *.local.json
+*.local.ps1

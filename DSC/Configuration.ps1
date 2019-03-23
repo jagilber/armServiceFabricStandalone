@@ -97,13 +97,13 @@ configuration SFStandaloneInstall
             }
             SetScript = { 
                     write-host "powershell.exe -file $using:installScript -thumbprint $using:thumbprint -nodes $using:nodes -commonname $using:commonname -sfpackageurl $using:sfPackageUrl"
-                    $result = Invoke-Expression -Command ("powershell.exe -file $using:installScript" `
-                        + "-thumbprint $using:thumbprint" `
-                        + "-nodes $using:nodes" `
-                        + "-commonname $using:commonname" `
-                        + "-sfpackageurl $using:sfPackageUrl" `
-                        + "-azureClientId $using:azureClientId" `
-                        + "-azureSecret $using:azureSecret" `
+                    $result = Invoke-Expression -Command ("powershell.exe -file $using:installScript " `
+                        + "-thumbprint $using:thumbprint " `
+                        + "-nodes $using:nodes " `
+                        + "-commonname $using:commonname " `
+                        + "-sfpackageurl $using:sfPackageUrl " `
+                        + "-azureClientId $using:azureClientId " `
+                        + "-azureSecret $using:azureSecret " `
                         + "-azureTenant $using:azureTenant") -Verbose -Debug
                     write-host "invoke result: $result"
                     
