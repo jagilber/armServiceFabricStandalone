@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminUserName": {
+      "value": "cloudadmin"
+    },
+    "adminPassword": {
+      "value": ""
+    },
+    "virtualMachineNamePrefix": {
+      "value": "nt000000"
+    },
+    "virtualMachineCount": {
+      "value": 5
+    },
+    "virtualMachineSize": {
+      "value": "Standard_DS2_v2"
+    },
+    "operatingSystem": {
+      "value": "Server2016"
+    },
+    "availabilitySetName": {
+      "value": "MyAvailabilitySet"
+    },
+    "certificateCommonName": {
+      "value": ""
+    },
+    "sfPackageUrl": {
+      "value": "https://go.microsoft.com/fwlink/?LinkId=730690"
+    },
+    "nodes":{
+      "value": "\"nt0000000,nt0000001,nt0000002,nt0000003,nt0000004\""
+    },
+    "certificateThumbprint": {
+      "value": ""
+    },
+    "sourceVaultValue": {
+      "value": ""
+    },
+    "certificateUrlValue": {
+      "value": ""
+    }
+  }
+}
