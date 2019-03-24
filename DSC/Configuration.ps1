@@ -4,37 +4,24 @@ param(
     [string]$thumbprint,
     [string]$virtualMachineNamePrefix,
     [int]$virtualMachineCount,
-    [string]$commonName,
+    [string]$commonName = "",
     [string]$sourceVaultValue,
     [string]$certificateUrlValue,
     [string]$transcript,
     [string]$serviceFabricPackageUrl,
-    [string]$azureClientId,
-    [string]$azureSecret,
-    [string]$azureTenant
+    [string]$azureClientId = "",
+    [string]$azureSecret = "",
+    [string]$azureTenant = ""
 )
 
 $configurationData = @{
     AllNodes = @(
         @{
-            NodeName = 'localhost'
+            NodeName                    = 'localhost'
             PSDscAllowPlainTextPassword = $true
-            PSDscAllowDomainUser = $true
+            PSDscAllowDomainUser        = $true
         }
     )
-}
-
-function is-fabricInstalled()
-{
-    $retval = $false
-
-    if((get-itemProperty "HKLM:\SOFTWARE\Microsoft\Service Fabric" -ErrorAction SilentlyContinue).FabricVersion)
-    {
-        $retval = $true
-    }
-    
-    write-host "is-fabricInstalled returning: $retval"
-    return $retval
 }
 
 configuration SFStandaloneInstall
@@ -47,14 +34,14 @@ configuration SFStandaloneInstall
         [string]$thumbprint,
         [string]$virtualMachineNamePrefix,
         [int]$virtualMachineCount,
-        [string]$commonName,
+        [string]$commonName = "",
         [string]$sourceVaultValue,
         [string]$certificateUrlValue,
         [string]$transcript = ".\transcript.log",
         [string]$serviceFabricPackageUrl,
-        [string]$azureClientId,
-        [string]$azureSecret,
-        [string]$azureTenant
+        [string]$azureClientId = "",
+        [string]$azureSecret = "",
+        [string]$azureTenant = ""
     )
     
     $ErrorActionPreference = "silentlycontinue"
@@ -76,12 +63,12 @@ configuration SFStandaloneInstall
 
         User LocalUserAccount
         {
-            Username = $UserAccount.UserName
-            Password = $UserAccount
-            Disabled = $false
-            Ensure = "Present"
-            FullName = "Local User Account"
-            Description = "Local User Account"
+            Username             = $UserAccount.UserName
+            Password             = $UserAccount
+            Disabled             = $false
+            Ensure               = "Present"
+            FullName             = "Local User Account"
+            Description          = "Local User Account"
             PasswordNeverExpires = $true
         }
 
@@ -89,15 +76,26 @@ configuration SFStandaloneInstall
 
         Script Install-Standalone
         {
-            GetScript = { @{ Result = is-fabricInstalled } }
+            GetScript            = {
+                $retval = $false
 
-            SetScript = { 
-                    write-host "powershell.exe -file $using:installScript -thumbprint $using:thumbprint -virtualMachineNamePrefix $using:virtualMachineNamePrefix -commonname $using:commonname -serviceFabricPackageUrl $using:serviceFabricPackageUrl"
-                    $result = Invoke-Expression -Command ("powershell.exe -file $using:installScript " `
+                if ((get-itemProperty "HKLM:\SOFTWARE\Microsoft\Service Fabric" -ErrorAction SilentlyContinue).FabricVersion)
+                {
+                    $retval = $true
+                }
+            
+                write-host "getScript is-fabricInstalled returning: $retval"
+
+                @{ Result = $retval } 
+            }
+
+            SetScript            = { 
+                write-host "powershell.exe -file $using:installScript -thumbprint $using:thumbprint -virtualMachineNamePrefix $using:virtualMachineNamePrefix -commonname $using:commonname -serviceFabricPackageUrl $using:serviceFabricPackageUrl"
+                $result = Invoke-Expression -Command ("powershell.exe -file $using:installScript " `
                         + "-thumbprint $using:thumbprint " `
                         + "-virtualMachineNamePrefix $using:virtualMachineNamePrefix " `
                         + "-virtualMachineCount $using:virtualMachineCount " `
-                        + "-commonName $using:commonname " `
+                        + "-commonName $using:commonName " `
                         + "-serviceFabricPackageUrl $using:serviceFabricPackageUrl " `
                         + "-azureClientId $using:azureClientId " `
                         + "-azureSecret $using:azureSecret " `
@@ -105,11 +103,21 @@ configuration SFStandaloneInstall
                         + "-sourceVaultValue $using:sourceVaultValue " `
                         + "-certificateUrlValue $using:certificateUrlValue") -Verbose -Debug
                     
-                    write-host "invoke result: $result"
-                    return @{ Result = $result}
+                write-host "invoke result: $result"
+                return @{ Result = $result}
             }
 
-            TestScript = { return is-fabricInstalled }
+            TestScript           = { 
+                $retval = $false
+
+                if ((get-itemProperty "HKLM:\SOFTWARE\Microsoft\Service Fabric" -ErrorAction SilentlyContinue).FabricVersion)
+                {
+                    $retval = $true
+                }
+            
+                write-host "getScript is-fabricInstalled returning: $retval"
+                return $retval 
+            }
 
             PsDscRunAsCredential = $credential
             #[ DependsOn = [string[]] ]
@@ -119,7 +127,7 @@ configuration SFStandaloneInstall
     stop-transcript
 }
 
-if($thumbprint -and $virtualMachineNamePrefix -and $commonName)
+if ($thumbprint -and $virtualMachineNamePrefix -and $commonName)
 {
     write-host "sfstandaloneinstall"
     SFStandaloneInstall -useraccount $UserAccount `

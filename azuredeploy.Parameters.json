@@ -6,7 +6,7 @@
       "value": ""
     },
     "adminUserName": {
-      "value": "cloudadmin"
+      "value": ""
     },
     "azureClientId": {
       "value": ""
@@ -27,10 +27,10 @@
       "value": ""
     },
     "sourceVaultValue": {
-      "value": "sfjagilber"
+      "value": ""
     },
     "keyVaultSecretName": {
-      "value": "sfjagilber"
+      "value": ""
     },
     "operatingSystem": {
       "value": "Server2016"

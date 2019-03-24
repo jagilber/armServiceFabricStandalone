@@ -11,10 +11,10 @@ param(
     [string]$thumbprint,
     [string]$virtualMachineNamePrefix,
     [int]$virtualMachineCount,
-    [string]$commonname,
-    [string]$azureClientId,
-    [string]$azureSecret,
-    [string]$azureTenant,
+    [string]$commonName = "",
+    [string]$azureClientId = "",
+    [string]$azureSecret = "",
+    [string]$azureTenant = "",
     [string]$sourceVaultValue,
     [string]$certificateUrlValue,
     [string]$diagnosticShare,
@@ -23,8 +23,8 @@ param(
     [string]$configurationFile = ".\ClusterConfig.X509.OneNode.json", # ".\ClusterConfig.X509.MultiMachine.json", #".\ClusterConfig.Unsecure.DevCluster.json",
     [string]$serviceFabricPackageUrl = "https://go.microsoft.com/fwlink/?LinkId=730690",
     [string]$packageName = "Microsoft.Azure.ServiceFabric.WindowsServer.latest.zip",
-    [int]$timeout = 1200,
-    [int]$subnetPrefix = "10"
+    [string]$subnetPrefix = "10",
+    [int]$timeout = 1200
 )
 
 $erroractionpreference = "continue"
@@ -161,8 +161,8 @@ function main()
     log-info "modifying json"
     $json = Get-Content -Raw $configurationFile
     $json = $json.Replace("[Thumbprint]", $thumbprint)
-    $json = $json.Replace("[IssuerCommonName]", $commonname)
-    $json = $json.Replace("[CertificateCommonName]", $commonname)
+    $json = $json.Replace("[IssuerCommonName]", $commonName)
+    $json = $json.Replace("[CertificateCommonName]", $commonName)
     
     log-info "saving json: $configurationFileMod"
     Out-File -InputObject $json -FilePath $configurationFileMod -Force
