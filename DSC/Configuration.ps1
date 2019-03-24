@@ -24,6 +24,19 @@ $configurationData = @{
     )
 }
 
+function is-fabricInstalled()
+{
+    $retval = $false
+
+    if((get-itemProperty "HKLM:\SOFTWARE\Microsoft\Service Fabric" -ErrorAction SilentlyContinue).FabricVersion)
+    {
+        $retval = $true
+    }
+    
+    write-host "is-fabricInstalled returning: $retval"
+    return $retval
+}
+
 configuration SFStandaloneInstall
 {
     param(
@@ -73,42 +86,10 @@ configuration SFStandaloneInstall
         }
 
         $credential = new-object Management.Automation.PSCredential -ArgumentList ".\$($userAccount.Username)", $userAccount.Password
-        $firstNode = $false
-        $nodes = [collections.arraylist]@()
-    
-        for($i = 0; $i -lt $virtualMachineCount; $i++)
-        {
-            $node = "$virtualMachineNamePrefix$i"
-            write-host "adding node to list: $node"
-            [void]$nodes.Add($node)
-        }
-
-        if($nodes[0] -imatch $env:COMPUTERNAME)
-        {
-            write-host "$env:COMPUTERNAME is first node."
-            $firstNode = $true
-        }
-        else 
-        {
-            write-host "$env:COMPUTERNAME is not first node."
-        }
 
         Script Install-Standalone
         {
-            GetScript = { 
-                    $result = $false
-
-                    if($firstNode)
-                    {
-                        $result = winrm g winrm/config/client
-                    }
-                    else 
-                    {
-                        $result = ((get-itemproperty "HKLM:\SOFTWARE\Microsoft\Service Fabric").FabricVersion)
-                    }
-                    
-                    @{ Result = $result}
-            }
+            GetScript = { @{ Result = is-fabricInstalled } }
 
             SetScript = { 
                     write-host "powershell.exe -file $using:installScript -thumbprint $using:thumbprint -virtualMachineNamePrefix $using:virtualMachineNamePrefix -commonname $using:commonname -serviceFabricPackageUrl $using:serviceFabricPackageUrl"
@@ -116,7 +97,7 @@ configuration SFStandaloneInstall
                         + "-thumbprint $using:thumbprint " `
                         + "-virtualMachineNamePrefix $using:virtualMachineNamePrefix " `
                         + "-virtualMachineCount $using:virtualMachineCount " `
-                        + "-commonname $using:commonname " `
+                        + "-commonName $using:commonname " `
                         + "-serviceFabricPackageUrl $using:serviceFabricPackageUrl " `
                         + "-azureClientId $using:azureClientId " `
                         + "-azureSecret $using:azureSecret " `
@@ -125,32 +106,10 @@ configuration SFStandaloneInstall
                         + "-certificateUrlValue $using:certificateUrlValue") -Verbose -Debug
                     
                     write-host "invoke result: $result"
-                    
-                    @{ Result = $result}
+                    return @{ Result = $result}
             }
 
-            TestScript = { 
-                
-                    $retval = $false
-
-                    if($firstNode)
-                    {   
-                        write-host "testscript first node"
-
-                        if((get-itemproperty "HKLM:\SOFTWARE\Microsoft\Service Fabric" -ErrorAction SilentlyContinue).FabricVersion)
-                        {
-                            $retval = $true
-                        }
-                    }
-                    else 
-                    {
-                        write-host "testscript not first node"
-                        $retval = [bool](winrm g winrm/config/client) -imatch "trustedhosts = ."
-                    }
-
-                    write-host "testscript returning: $retval"
-                    return $retval
-            }
+            TestScript = { return is-fabricInstalled }
 
             PsDscRunAsCredential = $credential
             #[ DependsOn = [string[]] ]

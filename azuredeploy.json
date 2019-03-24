@@ -310,7 +310,7 @@
               "wmfVersion": "latest",
               "configuration": {
                 "url": "[parameters('fileUris')]",
-                "script": "Configuration.ps1",
+                "script": "configuration.ps1",
                 "function": "SFStandaloneInstall"
               },
               "configurationArguments": {

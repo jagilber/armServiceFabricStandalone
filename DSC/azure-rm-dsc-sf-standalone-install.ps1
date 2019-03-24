@@ -285,7 +285,7 @@ function download-kvCert()
     $password = [Web.Security.Membership]::GeneratePassword(38, 5)
     log-info "setting cert password: $password"
     $protectedCertificateBytes = $certObject.Export([Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12, $password)
-    $pfxFilePath = "$PSScriptRoot\$certificateUrlValue.pfx"
+    $pfxFilePath = "$PSScriptRoot\$secretName.pfx"
 
     log-info "saving cert to: $pfxFilePath"
     [io.file]::WriteAllBytes($pfxFilePath, $protectedCertificateBytes)
