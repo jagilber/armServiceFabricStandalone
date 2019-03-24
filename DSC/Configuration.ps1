@@ -7,7 +7,7 @@ param(
     [string]$keyVaultName,
     [string]$keyVaultSecretName,
     [string]$transcript,
-    [string]$sfPackageUrl,
+    [string]$serviceFabricPackageUrl,
     [string]$azureClientId,
     [string]$azureSecret,
     [string]$azureTenant
@@ -36,7 +36,7 @@ configuration SFStandaloneInstall
         [string]$keyVaultName,
         [string]$keyVaultSecretName,
         [string]$transcript = ".\transcript.log",
-        [string]$sfPackageUrl,
+        [string]$serviceFabricPackageUrl,
         [string]$azureClientId,
         [string]$azureSecret,
         [string]$azureTenant
@@ -100,12 +100,12 @@ configuration SFStandaloneInstall
                     @{ Result = $result}
             }
             SetScript = { 
-                    write-host "powershell.exe -file $using:installScript -thumbprint $using:thumbprint -nodes $using:nodes -commonname $using:commonname -sfpackageurl $using:sfPackageUrl"
+                    write-host "powershell.exe -file $using:installScript -thumbprint $using:thumbprint -nodes $using:nodes -commonname $using:commonname -serviceFabricPackageUrl $using:serviceFabricPackageUrl"
                     $result = Invoke-Expression -Command ("powershell.exe -file $using:installScript " `
                         + "-thumbprint $using:thumbprint " `
                         + "-nodes $using:nodes " `
                         + "-commonname $using:commonname " `
-                        + "-sfpackageurl $using:sfPackageUrl " `
+                        + "-serviceFabricPackageUrl $using:serviceFabricPackageUrl " `
                         + "-azureClientId $using:azureClientId " `
                         + "-azureSecret $using:azureSecret " `
                         + "-azureTenant $using:azureTenant " `
@@ -146,7 +146,7 @@ if($thumbprint -and $nodes -and $commonName)
         -thumbprint $thumbprint `
         -nodes $nodes `
         -commonname $commonName `
-        -sfpackageurl $sfPackageUrl `
+        -serviceFabricPackageUrl $serviceFabricPackageUrl `
         -azureClientId $azureClientId `
         -azureSecret $azureSecret `
         -azureTenant $azureTenant `

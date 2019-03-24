@@ -20,7 +20,7 @@ param(
     [switch]$remove,
     [switch]$force,
     [string]$configurationFile = ".\ClusterConfig.X509.OneNode.json", # ".\ClusterConfig.X509.MultiMachine.json", #".\ClusterConfig.Unsecure.DevCluster.json",
-    [string]$sfPackageUrl = "https://go.microsoft.com/fwlink/?LinkId=730690",
+    [string]$serviceFabricPackageUrl = "https://go.microsoft.com/fwlink/?LinkId=730690",
     [string]$packageName = "Microsoft.Azure.ServiceFabric.WindowsServer.latest.zip",
     [int]$timeout = 1200,
     [int]$subnetPrefix = "10"
@@ -132,9 +132,9 @@ function main()
 
     if (!(test-path $packagePath))
     {
-        log-info "downloading package $sfPackageUrl"
-        log-info "(new-object net.webclient).DownloadFile($sfPackageUrl, $packageZip)"
-        $result = (new-object net.webclient).DownloadFile($sfPackageUrl, $packageZip)
+        log-info "downloading package $serviceFabricPackageUrl"
+        log-info "(new-object net.webclient).DownloadFile($serviceFabricPackageUrl, $packageZip)"
+        $result = (new-object net.webclient).DownloadFile($serviceFabricPackageUrl, $packageZip)
         log-info $result
         log-info ($error | out-string)
         log-info "Expand-Archive $packageZip -DestinationPath $packagePath -Force"

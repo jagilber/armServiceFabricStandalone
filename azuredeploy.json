@@ -57,6 +57,15 @@
         "description": "certificate url"
       }
     },
+    "dnsPrefixForPublicIP": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 14,
+      "defaultValue": "[resourceGroup().Name]",
+      "metadata": {
+        "description": "Globally unique DNS prefix for the Public IPs used to access the Virtual Machines"
+      }
+    },
     "fileUris": {
       "defaultValue": "https://raw.githubusercontent.com/jagilber/armServiceFabricStandalone/master/DSC/Configuration.zip",
       "type": "string",
@@ -78,6 +87,13 @@
         "description": "optional: azure key vault secret name to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
       }
     },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
     "nodes": {
       "defaultValue": "\"nt0000000,nt0000001,nt0000002,nt0000003,nt0000004\"",
       "type": "string",
@@ -85,7 +101,18 @@
         "description": "quoted, comma separated list of nodes"
       }
     },
-    "sfPackageUrl": {
+    "operatingSystem": {
+      "type": "string",
+      "defaultValue": "Server2016",
+      "metadata": {
+        "description": "Operating System of the Server"
+      },
+      "allowedValues": [
+        "Server2012R2",
+        "Server2016"
+      ]
+    },
+    "serviceFabricPackageUrl": {
       "defaultValue": "https://go.microsoft.com/fwlink/?LinkId=730690",
       "type": "string",
       "metadata": {
@@ -96,7 +123,7 @@
       "defaultValue": "",
       "type": "string",
       "metadata": {
-        "description": "certificate keyvault"
+        "description": "certificate keyvault resource id"
       }
     },
     "virtualMachineNamePrefix": {
@@ -126,33 +153,6 @@
       ],
       "metadata": {
         "description": "Virtual Machine Size"
-      }
-    },
-    "operatingSystem": {
-      "type": "string",
-      "defaultValue": "Server2016",
-      "metadata": {
-        "description": "Operating System of the Server"
-      },
-      "allowedValues": [
-        "Server2012R2",
-        "Server2016"
-      ]
-    },
-    "dnsPrefixForPublicIP": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 14,
-      "defaultValue": "[resourceGroup().Name]",
-      "metadata": {
-        "description": "Globally unique DNS prefix for the Public IPs used to access the Virtual Machines"
-      }
-    },
-    "location": {
-      "type": "string",
-      "defaultValue": "[resourceGroup().location]",
-      "metadata": {
-        "description": "Location for all resources."
       }
     }
   },
@@ -324,7 +324,7 @@
                 "thumbprint": "[parameters('certificateThumbprint')]",
                 "nodes": "[parameters('nodes')]",
                 "commonName": "[parameters('certificateCommonName')]",
-                "sfPackageUrl": "[parameters('sfPackageUrl')]",
+                "serviceFabricPackageUrl": "[parameters('serviceFabricPackageUrl')]",
                 "azureClientId": "[parameters('azureClientId')]",
                 "azureSecret": "[parameters('azureSecret')]",
                 "azureTenant": "[parameters('azureTenant')]",
