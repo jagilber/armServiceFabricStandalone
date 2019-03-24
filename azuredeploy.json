@@ -2,6 +2,19 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "adminUserName": {
+      "defaultValue": "cloudadmin",
+      "type": "string",
+      "metadata": {
+        "description": "Administrator Username for the local admin account"
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Administrator password for the local admin account"
+      }
+    },
     "azureClientId": {
       "defaultValue": "",
       "type": "string",
@@ -23,49 +36,71 @@
         "description": "optional: azure tenant to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
       }
     },
-    "sfPackageUrl": {
-      "defaultValue": "https://go.microsoft.com/fwlink/?LinkId=730690",
-      "type": "string"
-    },
     "certificateCommonName": {
       "defaultValue": "",
-      "type": "string"
-    },
-    "nodes": {
-      "defaultValue": "\"nt0000000,nt0000001,nt0000002,nt0000003,nt0000004\"",
-      "type": "string"
-    },
-    "fileUris": {
-      "defaultValue": "https://raw.githubusercontent.com/jagilber/armServiceFabricStandalone/master/DSC/Configuration.zip",
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "certificate common name"
+      }
     },
     "certificateThumbprint": {
       "defaultValue": "",
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "certificate thumbprint"
+      }
     },
     "certificateUrlValue": {
       "defaultValue": "",
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "certificate url"
+      }
+    },
+    "fileUris": {
+      "defaultValue": "https://raw.githubusercontent.com/jagilber/armServiceFabricStandalone/master/DSC/Configuration.zip",
+      "type": "string",
+      "metadata": {
+        "description": "dsc configuration.zip download url"
+      }
+    },
+    "keyVaultName": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "optional: azure key vault name to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
+      }
+    },
+    "keyVaultSecretName": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "optional: azure key vault secret name to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
+      }
+    },
+    "nodes": {
+      "defaultValue": "\"nt0000000,nt0000001,nt0000002,nt0000003,nt0000004\"",
+      "type": "string",
+      "metadata": {
+        "description": "quoted, comma separated list of nodes"
+      }
+    },
+    "sfPackageUrl": {
+      "defaultValue": "https://go.microsoft.com/fwlink/?LinkId=730690",
+      "type": "string",
+      "metadata": {
+        "description": "service fabric standalone download url link"
+      }
     },
     "sourceVaultValue": {
       "defaultValue": "",
-      "type": "string"
-    },
-    "adminUserName": {
-      "defaultValue": "cloudadmin",
       "type": "string",
       "metadata": {
-        "description": "Administrator Username for the local admin account"
-      }
-    },
-    "adminPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Administrator password for the local admin account"
+        "description": "certificate keyvault"
       }
     },
     "virtualMachineNamePrefix": {
-      "defaultValue": "MyVM0",
+      "defaultValue": "nt000000",
       "type": "string",
       "maxLength": 15,
       "metadata": {
@@ -104,13 +139,6 @@
         "Server2016"
       ]
     },
-    "availabilitySetName": {
-      "defaultValue": "MyAvailabilitySet",
-      "type": "string",
-      "metadata": {
-        "description": "Availability Set Name where the VM will be placed"
-      }
-    },
     "dnsPrefixForPublicIP": {
       "type": "string",
       "minLength": 1,
@@ -129,7 +157,8 @@
     }
   },
   "variables": {
-    "myVNETName": "myVNET",
+    "availabilitySetName": "sfsaAvailabilitySet",
+    "myVNETName": "sfsaVnet",
     "myVNETPrefix": "10.0.0.0/16",
     "myVNETSubnet1Name": "Subnet1",
     "myVNETSubnet1Prefix": "10.0.0.0/24",
@@ -192,7 +221,7 @@
     },
     {
       "type": "Microsoft.Compute/availabilitySets",
-      "name": "[parameters('availabilitySetName')]",
+      "name": "[variables('availabilitySetName')]",
       "apiVersion": "2017-03-30",
       "location": "[parameters('location')]",
       "properties": {
@@ -261,7 +290,7 @@
           ]
         },
         "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('availabilitySetName'))]"
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
         },
         "diagnosticsProfile": {
           "bootDiagnostics": {
@@ -298,7 +327,9 @@
                 "sfPackageUrl": "[parameters('sfPackageUrl')]",
                 "azureClientId": "[parameters('azureClientId')]",
                 "azureSecret": "[parameters('azureSecret')]",
-                "azureTenant": "[parameters('azureTenant')]"
+                "azureTenant": "[parameters('azureTenant')]",
+                "keyVaultName": "[parameters('keyVaultName')]",
+                "keyVaultSecretName": "[parameters('keyVaultSecretName')]"
               },
               "privacy": {
                 "dataCollection": "enable"
@@ -316,7 +347,7 @@
         }
       ],
       "dependsOn": [
-        "[concat('Microsoft.Compute/availabilitySets/', parameters('availabilitySetName'))]",
+        "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]",
         "[concat('Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]",
         "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('virtualMachineNamePrefix'), copyIndex(), '-NIC1'))]"
       ]

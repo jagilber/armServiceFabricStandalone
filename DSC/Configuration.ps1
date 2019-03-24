@@ -4,6 +4,8 @@ param(
     [string]$thumbprint,
     [string[]]$nodes,
     [string]$commonName,
+    [string]$keyVaultName,
+    [string]$keyVaultSecretName,
     [string]$transcript,
     [string]$sfPackageUrl,
     [string]$azureClientId,
@@ -30,7 +32,9 @@ configuration SFStandaloneInstall
         [string]$installScript = "$PSScriptRoot\azure-rm-dsc-sf-standalone-install.ps1",
         [string]$thumbprint,
         [string[]]$nodes,
-        [string]$commonname,
+        [string]$commonName,
+        [string]$keyVaultName,
+        [string]$keyVaultSecretName,
         [string]$transcript = ".\transcript.log",
         [string]$sfPackageUrl,
         [string]$azureClientId,
@@ -104,7 +108,9 @@ configuration SFStandaloneInstall
                         + "-sfpackageurl $using:sfPackageUrl " `
                         + "-azureClientId $using:azureClientId " `
                         + "-azureSecret $using:azureSecret " `
-                        + "-azureTenant $using:azureTenant") -Verbose -Debug
+                        + "-azureTenant $using:azureTenant " `
+                        + "-keyVaultName $using:keyVaultName " `
+                        + "-keyVaultSecretName $using:kevVaultSecretName") -Verbose -Debug
                     write-host "invoke result: $result"
                     
                     @{ Result = $result}
@@ -144,6 +150,8 @@ if($thumbprint -and $nodes -and $commonName)
         -azureClientId $azureClientId `
         -azureSecret $azureSecret `
         -azureTenant $azureTenant `
+        -keyVaultName $keyVaultName `
+        -keyVaultSecretName $keyVaultSecretName `
         -ConfigurationData $configurationData
 
     # Start-DscConfiguration .\SFStandaloneInstall -wait -force -debug -verbose

@@ -14,6 +14,8 @@ param(
     [string]$azureClientId,
     [string]$azureSecret,
     [string]$azureTenant,
+    [string]$keyVaultName,
+    [string]$keyVaultSecretName,
     [string]$diagnosticShare,
     [switch]$remove,
     [switch]$force,
@@ -258,21 +260,27 @@ function download-kvCert()
 
     #  get the secret from key vault
     #
-    log-info "getting secret '$secretName' from keyvault '$vaultName'..."
-    $secret = get-azurekeyvaultsecret -vaultname $vaultName -name $secretName
+    log-info "getting secret '$keyVaultSecretName' from keyvault '$keyVaultName'..."
+    $secret = get-azurekeyVaultSecret -vaultname $keyVaultName -name $keyVaultSecretName
 
     $certCollection = New-Object Security.Cryptography.X509Certificates.X509Certificate2Collection
 
     $bytes = [convert]::FromBase64String($secret.SecretValueText)
-    $certCollection.Import($bytes, $null, [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
+    $certCollection.Import($bytes, $null, [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable -bor [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet)
         
     add-type -AssemblyName System.Web
     $password = [Web.Security.Membership]::GeneratePassword(38, 5)
     $protectedCertificateBytes = $certCollection.Export([Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12, $password)
 
-    $pfxFilePath = join-path $PSScriptRoot "$([guid]::NewGuid()).pfx"
+    $pfxFilePath = "$PSScriptRoot\$keyVaultSecretName.pfx"
     log-info "writing the cert as '$pfxFilePath'..."
     [io.file]::WriteAllBytes($pfxFilePath, $protectedCertificateBytes)
+
+    log-info "import certificate to current user Certificate store"
+    $Certificatestore = New-Object System.Security.Cryptography.X509Certificates.X509Store -argumentlist "My","Currentuser"
+    $Certificatestore.open("readWrite")
+    $Certificatestore.Add($certCollection)
+    $Certificatestore.Close()
 
 }
 
@@ -290,4 +298,4 @@ function finish-script()
     log-info "all errors: $($error | out-string)"
 }
 
-main
+return main
