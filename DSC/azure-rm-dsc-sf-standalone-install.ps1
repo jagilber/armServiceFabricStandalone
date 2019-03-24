@@ -11,9 +11,13 @@ param(
     [string]$thumbprint,
     [string]$virtualMachineNamePrefix,
     [int]$virtualMachineCount,
+    [Parameter(Mandatory=$false)]
     [string]$commonName = "",
+    [Parameter(Mandatory=$false)]
     [string]$azureClientId = "",
+    [Parameter(Mandatory=$false)]
     [string]$azureSecret = "",
+    [Parameter(Mandatory=$false)]
     [string]$azureTenant = "",
     [string]$sourceVaultValue,
     [string]$certificateUrlValue,

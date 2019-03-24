@@ -4,13 +4,17 @@ param(
     [string]$thumbprint,
     [string]$virtualMachineNamePrefix,
     [int]$virtualMachineCount,
+    [Parameter(Mandatory=$false)]
     [string]$commonName = "",
     [string]$sourceVaultValue,
     [string]$certificateUrlValue,
     [string]$transcript,
     [string]$serviceFabricPackageUrl,
+    [Parameter(Mandatory=$false)]
     [string]$azureClientId = "",
+    [Parameter(Mandatory=$false)]
     [string]$azureSecret = "",
+    [Parameter(Mandatory=$false)]
     [string]$azureTenant = ""
 )
 
@@ -34,13 +38,17 @@ configuration SFStandaloneInstall
         [string]$thumbprint,
         [string]$virtualMachineNamePrefix,
         [int]$virtualMachineCount,
+        [Parameter(Mandatory=$false)]
         [string]$commonName = "",
         [string]$sourceVaultValue,
         [string]$certificateUrlValue,
         [string]$transcript = ".\transcript.log",
         [string]$serviceFabricPackageUrl,
+        [Parameter(Mandatory=$false)]
         [string]$azureClientId = "",
+        [Parameter(Mandatory=$false)]
         [string]$azureSecret = "",
+        [Parameter(Mandatory=$false)]
         [string]$azureTenant = ""
     )
     
