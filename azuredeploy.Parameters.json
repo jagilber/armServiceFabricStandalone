@@ -26,6 +26,12 @@
     "certificateUrlValue": {
       "value": ""
     },
+    "keyVaultName": {
+      "value": "sfjagilber"
+    },
+    "keyVaultSecretName": {
+      "value": "sfjagilber"
+    },
     "nodes": {
       "value": "\"nt0000000,nt0000001,nt0000002,nt0000003,nt0000004\""
     },

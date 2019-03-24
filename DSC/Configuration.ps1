@@ -111,7 +111,7 @@ configuration SFStandaloneInstall
                         + "-azureSecret $using:azureSecret " `
                         + "-azureTenant $using:azureTenant " `
                         + "-keyVaultName $using:keyVaultName " `
-                        + "-keyVaultSecretName $using:kevVaultSecretName") -Verbose -Debug
+                        + "-keyVaultSecretName $using:keyVaultSecretName") -Verbose -Debug
                     
                     write-host "invoke result: $result"
                     
@@ -121,7 +121,7 @@ configuration SFStandaloneInstall
             TestScript = { 
                 
                     $retval = $false
-                    
+
                     if($firstNode)
                     {   
                         write-host "testscript first node"
