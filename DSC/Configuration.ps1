@@ -99,6 +99,7 @@ configuration SFStandaloneInstall
                     
                     @{ Result = $result}
             }
+            
             SetScript = { 
                     write-host "powershell.exe -file $using:installScript -thumbprint $using:thumbprint -nodes $using:nodes -commonname $using:commonname -serviceFabricPackageUrl $using:serviceFabricPackageUrl"
                     $result = Invoke-Expression -Command ("powershell.exe -file $using:installScript " `
@@ -111,25 +112,34 @@ configuration SFStandaloneInstall
                         + "-azureTenant $using:azureTenant " `
                         + "-keyVaultName $using:keyVaultName " `
                         + "-keyVaultSecretName $using:kevVaultSecretName") -Verbose -Debug
+                    
                     write-host "invoke result: $result"
                     
                     @{ Result = $result}
-                }
+            }
+
             TestScript = { 
                 
+                    bool $retval = $false
                     if($firstNode)
-                    {
+                    {   
+                        write-host "testscript first node"
+
                         if((get-itemproperty "HKLM:\SOFTWARE\Microsoft\Service Fabric" -ErrorAction SilentlyContinue).FabricVersion)
                         {
-                            return $true
+                            $retval = $true
                         }
                     }
                     else 
                     {
-                        return [bool](winrm g winrm/config/client) -imatch "trustedhosts = ."
+                        write-host "testscript not first node"
+                        $retval = [bool](winrm g winrm/config/client) -imatch "trustedhosts = ."
                     }
-                    return $false
-                }
+
+                    write-host "testscript returning: $retval"
+                    return $retval
+            }
+
             PsDscRunAsCredential = $credential
             #[ DependsOn = [string[]] ]
         }

@@ -1,5 +1,5 @@
 # armServiceFabricStandalone
-arm template to deploy Service Fabric Standalone cluster into Azure
+(beta) arm template to deploy Service Fabric Standalone cluster into Azure
 
 ## required:
 - a self signed or trusted certificate stored in azure keyvault.

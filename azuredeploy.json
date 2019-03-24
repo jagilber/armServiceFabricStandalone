@@ -67,10 +67,10 @@
       }
     },
     "fileUris": {
-      "defaultValue": "https://raw.githubusercontent.com/jagilber/armServiceFabricStandalone/master/DSC/Configuration.zip",
+      "defaultValue": "https://raw.githubusercontent.com/jagilber/armServiceFabricStandalone/master/DSC/DSC.zip",
       "type": "string",
       "metadata": {
-        "description": "dsc configuration.zip download url"
+        "description": "dsc DSC.zip download url"
       }
     },
     "keyVaultName": {

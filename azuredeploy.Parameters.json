@@ -32,7 +32,7 @@
     "operatingSystem": {
       "value": "Server2016"
     },
-    "sfPackageUrl": {
+    "serviceFabricPackageUrl": {
       "value": "https://go.microsoft.com/fwlink/?LinkId=730690"
     },
     "sourceVaultValue": {

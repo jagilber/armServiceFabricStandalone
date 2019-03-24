@@ -270,10 +270,11 @@ function download-kvCert()
         
     add-type -AssemblyName System.Web
     $password = [Web.Security.Membership]::GeneratePassword(38, 5)
+    log-info "setting cert password: $password"
     $protectedCertificateBytes = $certCollection.Export([Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12, $password)
 
     $pfxFilePath = "$PSScriptRoot\$keyVaultSecretName.pfx"
-    log-info "writing the cert as '$pfxFilePath'..."
+    log-info "saving cert to: $pfxFilePath"
     [io.file]::WriteAllBytes($pfxFilePath, $protectedCertificateBytes)
 
     log-info "import certificate to current user Certificate store"
