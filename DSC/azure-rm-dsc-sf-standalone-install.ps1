@@ -222,7 +222,7 @@ function main()
             -MaxPercentFailedNodes 0 `
             -Verbose
         
-        log-info $result
+        log-info "create result: $result"
         #log-info "connecting to cluster (not currently working)"
         #$result = Connect-ServiceFabricCluster -ConnectionEndpoint localhost:19000
         #log-info $result 
@@ -297,7 +297,6 @@ function download-kvCert()
     $certificateStore.Open("readWrite")
     $certificateStore.Add($certObject)
     $certificateStore.Close()
-
 }
 
 function log-info($data)

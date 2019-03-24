@@ -57,15 +57,6 @@
         "description": "certificate url"
       }
     },
-    "dnsPrefixForPublicIP": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 14,
-      "defaultValue": "[resourceGroup().Name]",
-      "metadata": {
-        "description": "Globally unique DNS prefix for the Public IPs used to access the Virtual Machines"
-      }
-    },
     "fileUris": {
       "defaultValue": "https://raw.githubusercontent.com/jagilber/armServiceFabricStandalone/master/DSC/DSC.zip",
       "type": "string",
@@ -85,13 +76,6 @@
       "type": "string",
       "metadata": {
         "description": "optional: azure key vault secret name to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
-      }
-    },
-    "location": {
-      "type": "string",
-      "defaultValue": "[resourceGroup().location]",
-      "metadata": {
-        "description": "Location for all resources."
       }
     },
     "operatingSystem": {
@@ -151,6 +135,7 @@
   },
   "variables": {
     "availabilitySetName": "sfsaAvailabilitySet",
+    "dnsPrefixForPublicIP": "[resourceGroup().name]",
     "myVNETName": "sfsaVnet",
     "myVNETPrefix": "10.0.0.0/16",
     "myVNETSubnet1Name": "Subnet1",
@@ -176,7 +161,7 @@
     {
       "name": "[variables('myVNETName')]",
       "type": "Microsoft.Network/virtualNetworks",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2016-03-30",
       "dependsOn": [],
       "tags": {
@@ -201,7 +186,7 @@
     {
       "name": "[variables('diagnosticStorageAccountName')]",
       "type": "Microsoft.Storage/storageAccounts",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2016-01-01",
       "sku": {
         "name": "Standard_LRS"
@@ -216,7 +201,7 @@
       "type": "Microsoft.Compute/availabilitySets",
       "name": "[variables('availabilitySetName')]",
       "apiVersion": "2017-03-30",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "properties": {
         "platformFaultDomainCount": "[variables('availabilitySetPlatformFaultDomainCount')]",
         "platformUpdateDomainCount": "[variables('availabilitySetPlatformUpdateDomainCount')]"
@@ -229,7 +214,7 @@
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[concat(parameters('virtualMachineNamePrefix'), copyIndex())]",
       "apiVersion": "2017-03-30",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "copy": {
         "name": "VMcopy",
         "count": "[parameters('virtualMachineCount')]"
@@ -297,7 +282,7 @@
           "type": "extensions",
           "name": "Microsoft.Powershell.DSC",
           "apiVersion": "2018-10-01",
-          "location": "[parameters('location')]",
+          "location": "[resourceGroup().location]",
           "dependsOn": [
             "[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineNamePrefix'),copyIndex())]"
           ],
@@ -350,7 +335,7 @@
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[concat(parameters('virtualMachineNamePrefix'), copyIndex(), '-NIC1')]",
       "apiVersion": "2016-03-30",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "copy": {
         "name": "NICCopy",
         "count": "[parameters('virtualMachineCount')]"
@@ -384,7 +369,7 @@
       "apiVersion": "2016-03-30",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[concat(parameters('virtualMachineNamePrefix'), copyIndex(), '-PIP1')]",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "copy": {
         "name": "PIPCopy",
         "count": "[parameters('virtualMachineCount')]"
@@ -395,7 +380,7 @@
       "properties": {
         "publicIPAllocationMethod": "Dynamic",
         "dnsSettings": {
-          "domainNameLabel": "[concat(parameters('dnsPrefixForPublicIP'), copyIndex())]"
+          "domainNameLabel": "[concat(variables('dnsPrefixForPublicIP'), copyIndex())]"
         }
       }
     }
