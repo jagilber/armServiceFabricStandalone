@@ -73,14 +73,14 @@
         "description": "dsc DSC.zip download url"
       }
     },
-    "keyVaultName": {
+    "sourceVaultValue": {
       "defaultValue": "",
       "type": "string",
       "metadata": {
         "description": "optional: azure key vault name to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
       }
     },
-    "keyVaultSecretName": {
+    "certificateUrlValue": {
       "defaultValue": "",
       "type": "string",
       "metadata": {
@@ -92,13 +92,6 @@
       "defaultValue": "[resourceGroup().location]",
       "metadata": {
         "description": "Location for all resources."
-      }
-    },
-    "nodes": {
-      "defaultValue": "\"nt0000000,nt0000001,nt0000002,nt0000003,nt0000004\"",
-      "type": "string",
-      "metadata": {
-        "description": "quoted, comma separated list of nodes"
       }
     },
     "operatingSystem": {
@@ -322,14 +315,15 @@
               },
               "configurationArguments": {
                 "thumbprint": "[parameters('certificateThumbprint')]",
-                "nodes": "[parameters('nodes')]",
+                "virtualMachineNamePrefix": "[parameters('virtualMachineNamePrefix')]",
                 "commonName": "[parameters('certificateCommonName')]",
                 "serviceFabricPackageUrl": "[parameters('serviceFabricPackageUrl')]",
                 "azureClientId": "[parameters('azureClientId')]",
                 "azureSecret": "[parameters('azureSecret')]",
                 "azureTenant": "[parameters('azureTenant')]",
-                "keyVaultName": "[parameters('keyVaultName')]",
-                "keyVaultSecretName": "[parameters('keyVaultSecretName')]"
+                "sourceVaultValue": "[parameters('sourceVaultValue')]",
+                "certificateUrlValue": "[parameters('certificateUrlValue')]",
+                "virtualMachineCount": "[parameters('virtualMachineCount')]"
               },
               "privacy": {
                 "dataCollection": "enable"

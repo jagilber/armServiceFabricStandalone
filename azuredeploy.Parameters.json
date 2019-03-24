@@ -26,14 +26,11 @@
     "certificateUrlValue": {
       "value": ""
     },
-    "keyVaultName": {
+    "sourceVaultValue": {
       "value": "sfjagilber"
     },
     "keyVaultSecretName": {
       "value": "sfjagilber"
-    },
-    "nodes": {
-      "value": "\"nt0000000,nt0000001,nt0000002,nt0000003,nt0000004\""
     },
     "operatingSystem": {
       "value": "Server2016"

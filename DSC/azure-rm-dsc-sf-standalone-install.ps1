@@ -9,13 +9,14 @@
 #>
 param(
     [string]$thumbprint,
-    [string[]]$nodes,
+    [string]$virtualMachineNamePrefix,
+    [int]$virtualMachineCount,
     [string]$commonname,
     [string]$azureClientId,
     [string]$azureSecret,
     [string]$azureTenant,
-    [string]$keyVaultName,
-    [string]$keyVaultSecretName,
+    [string]$sourceVaultValue,
+    [string]$certificateUrlValue,
     [string]$diagnosticShare,
     [switch]$remove,
     [switch]$force,
@@ -48,12 +49,12 @@ function main()
     # verify and acl cert
     $cert = get-item Cert:\LocalMachine\My\$thumbprint
 
-    if($cert)
+    if ($cert)
     {
         log-info "found cert: $cert"
-        $machineKeyFileName = [regex]::Match((certutil -store my $thumbprint),"Unique container name: (.+?)\s").groups[1].value
+        $machineKeyFileName = [regex]::Match((certutil -store my $thumbprint), "Unique container name: (.+?)\s").groups[1].value
 
-        if(!$machineKeyFileName)
+        if (!$machineKeyFileName)
         {
             log-info "error: unable to find file for cert: $machineKeyFileName"
             finish-script
@@ -86,7 +87,7 @@ function main()
     # enable remoting
     log-info "disable firewall"
     # todo disable only sf ports?
-    set-netFirewallProfile -Profile Domain,Public,Private -Enabled False
+    set-netFirewallProfile -Profile Domain, Public, Private -Enabled False
     log-info "enable remoting"
     enable-psremoting
     winrm quickconfig -force -q
@@ -98,19 +99,24 @@ function main()
 
 
     # if creds supplied, download cert and put into currentuser my store for cluster admin
-    if($azureClientId -and $azureSecret -and $azureTenant)
+    if ($azureClientId -and $azureSecret -and $azureTenant)
     {
         log-info "downloading cert from store"
         download-kvCert
     }
 
     # read and modify config with thumb and nodes if first node
-    $nodes = $nodes.split(',')
+    $nodes = @()
+
+    for ($i = 0; $i -lt $virtualMachineCount; $i++)
+    {
+        $nodes.Add("$virtualMachineNamePrefix$i")
+    }
 
     log-info "nodes count: $($nodes.count)"
     log-info "nodes: $($nodes)"
 
-    if($nodes[0] -inotmatch $env:COMPUTERNAME)
+    if ($nodes[0] -inotmatch $env:COMPUTERNAME)
     {
         log-info "$env:COMPUTERNAME is not first node. exiting..."
         finish-script
@@ -144,7 +150,7 @@ function main()
     Set-Location $packagePath
     log-info "current location: $packagePath"
 
-    if(!(test-path $configurationFile))
+    if (!(test-path $configurationFile))
     {
         log-info "error: $configurationFile does not exist"
         return
@@ -152,9 +158,9 @@ function main()
 
     log-info "modifying json"
     $json = Get-Content -Raw $configurationFile
-    $json = $json.Replace("[Thumbprint]",$thumbprint)
-    $json = $json.Replace("[IssuerCommonName]",$commonname)
-    $json = $json.Replace("[CertificateCommonName]",$commonname)
+    $json = $json.Replace("[Thumbprint]", $thumbprint)
+    $json = $json.Replace("[IssuerCommonName]", $commonname)
+    $json = $json.Replace("[CertificateCommonName]", $commonname)
     
     log-info "saving json: $configurationFileMod"
     Out-File -InputObject $json -FilePath $configurationFileMod -Force
@@ -165,16 +171,16 @@ function main()
 
     log-info "adding nodes"
 
-    foreach($node in $nodes)
+    foreach ($node in $nodes)
     {
         #[int]$toggle = !$toggle
         $nodeList.Add(@{
-            nodeName      = $node
-            iPAddress     = (@((Resolve-DnsName $node).ipaddress) -imatch "$subnetPrefix\..+\..+\.")[0]
-            nodeTypeRef   = "NodeType0"
-            faultDomain   = "fd:/dc1/r$count"
-            upgradeDomain = "UD$count"
-        })
+                nodeName      = $node
+                iPAddress     = (@((Resolve-DnsName $node).ipaddress) -imatch "$subnetPrefix\..+\..+\.")[0]
+                nodeTypeRef   = "NodeType0"
+                faultDomain   = "fd:/dc1/r$count"
+                upgradeDomain = "UD$count"
+            })
         
         $count++
     }
@@ -196,7 +202,7 @@ function main()
         $result = .\TestConfiguration.ps1 -ClusterConfigFilePath $configurationFileMod
         log-info $result
 
-        if($result -imatch "false|fail|exception")
+        if ($result -imatch "false|fail|exception")
         {
             log-info "error: failed test: $($error | out-string)"
             return 1
@@ -211,18 +217,18 @@ function main()
             -Verbose
         
         log-info $result
-        log-info "connecting to cluster (not currently working)"
-        $result = Connect-ServiceFabricCluster -ConnectionEndpoint localhost:19000
-        log-info $result 
-        $result = Get-ServiceFabricNode |Format-Table
-        log-info $result 
+        #log-info "connecting to cluster (not currently working)"
+        #$result = Connect-ServiceFabricCluster -ConnectionEndpoint localhost:19000
+        #log-info $result 
+        #$result = Get-ServiceFabricNode |Format-Table
+        #log-info $result 
     }
 
     finish-script
     # todo remove
     $error.Clear()
 
-    if(!$error)
+    if (!$error)
     {
         return $true
     }
@@ -260,8 +266,15 @@ function download-kvCert()
 
     #  get the secret from key vault
     #
-    log-info "getting secret '$keyVaultSecretName' from keyvault '$keyVaultName'..."
-    $secret = get-azurekeyVaultSecret -vaultname $keyVaultName -name $keyVaultSecretName
+    log-info "getting secret: $certificateUrlValue from keyvault: $sourceVaultValue"
+    $vaultPattern = "Microsoft.KeyVault/vaults/(.+?)(/|$)"
+    $certificatePattern = "/secrets/(.+?)/"
+
+    $vaultName = [regex]::Match($sourceVaultValue, $vaultPattern, [text.RegularExpressions.RegexOptions]::IgnoreCase).Groups[1].Value
+    $secretName = [regex]::Match($certificateUrlValue, $certificatePattern, [text.RegularExpressions.RegexOptions]::IgnoreCase).Groups[1].Value
+    log-info "getting secret: $secretName from keyvault: $vaultName"
+
+    $secret = get-azurekeyVaultSecret -vaultname $vaultName -name $secretName
 
     $certObject = New-Object Security.Cryptography.X509Certificates.X509Certificate2
 
@@ -273,12 +286,12 @@ function download-kvCert()
     log-info "setting cert password: $password"
     $protectedCertificateBytes = $certObject.Export([Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12, $password)
 
-    $pfxFilePath = "$PSScriptRoot\$keyVaultSecretName.pfx"
+    $pfxFilePath = "$PSScriptRoot\$certificateUrlValue.pfx"
     log-info "saving cert to: $pfxFilePath"
     [io.file]::WriteAllBytes($pfxFilePath, $protectedCertificateBytes)
 
     log-info "import certificate to current user Certificate store"
-    $Certificatestore = New-Object System.Security.Cryptography.X509Certificates.X509Store -argumentlist "My","Currentuser"
+    $Certificatestore = New-Object System.Security.Cryptography.X509Certificates.X509Store -argumentlist "My", "Currentuser"
     $Certificatestore.open("readWrite")
     $Certificatestore.Add($certObject)
     $Certificatestore.Close()

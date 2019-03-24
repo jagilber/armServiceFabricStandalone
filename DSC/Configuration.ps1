@@ -2,10 +2,11 @@ param(
     [PSCredential]$UserAccount,
     [string]$installScript = "$PSScriptRoot\azure-rm-dsc-sf-standalone-install.ps1",
     [string]$thumbprint,
-    [string[]]$nodes,
+    [string]$virtualMachineNamePrefix,
+    [int]$virtualMachineCount,
     [string]$commonName,
-    [string]$keyVaultName,
-    [string]$keyVaultSecretName,
+    [string]$sourceVaultValue,
+    [string]$certificateUrlValue,
     [string]$transcript,
     [string]$serviceFabricPackageUrl,
     [string]$azureClientId,
@@ -31,10 +32,11 @@ configuration SFStandaloneInstall
         [PSCredential]$UserAccount,
         [string]$installScript = "$PSScriptRoot\azure-rm-dsc-sf-standalone-install.ps1",
         [string]$thumbprint,
-        [string[]]$nodes,
+        [string]$virtualMachineNamePrefix,
+        [int]$virtualMachineCount,
         [string]$commonName,
-        [string]$keyVaultName,
-        [string]$keyVaultSecretName,
+        [string]$sourceVaultValue,
+        [string]$certificateUrlValue,
         [string]$transcript = ".\transcript.log",
         [string]$serviceFabricPackageUrl,
         [string]$azureClientId,
@@ -72,6 +74,12 @@ configuration SFStandaloneInstall
 
         $credential = new-object Management.Automation.PSCredential -ArgumentList ".\$($userAccount.Username)", $userAccount.Password
         $firstNode = $false
+        $nodes = @()
+    
+        for($i = 0; $i -lt $virtualMachineCount; $i++)
+        {
+            $nodes.Add("$virtualMachineNamePrefix$i")
+        }
 
         if($nodes[0] -imatch $env:COMPUTERNAME)
         {
@@ -101,17 +109,18 @@ configuration SFStandaloneInstall
             }
 
             SetScript = { 
-                    write-host "powershell.exe -file $using:installScript -thumbprint $using:thumbprint -nodes $using:nodes -commonname $using:commonname -serviceFabricPackageUrl $using:serviceFabricPackageUrl"
+                    write-host "powershell.exe -file $using:installScript -thumbprint $using:thumbprint -virtualMachineNamePrefix $using:virtualMachineNamePrefix -commonname $using:commonname -serviceFabricPackageUrl $using:serviceFabricPackageUrl"
                     $result = Invoke-Expression -Command ("powershell.exe -file $using:installScript " `
                         + "-thumbprint $using:thumbprint " `
-                        + "-nodes $using:nodes " `
+                        + "-virtualMachineNamePrefix $using:virtualMachineNamePrefix " `
+                        + "-virtualMachineCount $using:virtualMachineCount " `
                         + "-commonname $using:commonname " `
                         + "-serviceFabricPackageUrl $using:serviceFabricPackageUrl " `
                         + "-azureClientId $using:azureClientId " `
                         + "-azureSecret $using:azureSecret " `
                         + "-azureTenant $using:azureTenant " `
-                        + "-keyVaultName $using:keyVaultName " `
-                        + "-keyVaultSecretName $using:keyVaultSecretName") -Verbose -Debug
+                        + "-sourceVaultValue $using:sourceVaultValue " `
+                        + "-certificateUrlValue $using:certificateUrlValue") -Verbose -Debug
                     
                     write-host "invoke result: $result"
                     
@@ -149,20 +158,21 @@ configuration SFStandaloneInstall
     stop-transcript
 }
 
-if($thumbprint -and $nodes -and $commonName)
+if($thumbprint -and $virtualMachineNamePrefix -and $commonName)
 {
     write-host "sfstandaloneinstall"
     SFStandaloneInstall -useraccount $UserAccount `
         -installScript $installScript `
         -thumbprint $thumbprint `
-        -nodes $nodes `
+        -virtualMachineNamePrefix $virtualMachineNamePrefix `
+        -virtualMachineCount $virtualMachineCount `
         -commonname $commonName `
         -serviceFabricPackageUrl $serviceFabricPackageUrl `
         -azureClientId $azureClientId `
         -azureSecret $azureSecret `
         -azureTenant $azureTenant `
-        -keyVaultName $keyVaultName `
-        -keyVaultSecretName $keyVaultSecretName `
+        -sourceVaultValue $sourceVaultValue `
+        -certificateUrlValue $certificateUrlValue `
         -ConfigurationData $configurationData
 
     # Start-DscConfiguration .\SFStandaloneInstall -wait -force -debug -verbose
