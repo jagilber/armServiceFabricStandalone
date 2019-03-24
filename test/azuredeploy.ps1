@@ -1,15 +1,12 @@
 param(
     $resourceGroupName = $Global:resourceGroupName,
-    $location = $global:location,
-    $adminUserName = $global:adminUserName,
-    $adminPassword = $global:adminPassword
+    $location = $global:location
 )
 
 $deploymentName = $resourceGroupName
 set-location $PSScriptRoot
 
-.\azure-rm-deploy-template.ps1 -adminUsername $adminUserName `
-    -adminPassword $adminPassword `
+.\azure-rm-deploy-template.ps1 `
     -deploymentName $deploymentName `
     -location $location `
     -resourceGroup $resourceGroupName `

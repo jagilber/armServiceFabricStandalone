@@ -99,7 +99,7 @@ configuration SFStandaloneInstall
                     
                     @{ Result = $result}
             }
-            
+
             SetScript = { 
                     write-host "powershell.exe -file $using:installScript -thumbprint $using:thumbprint -nodes $using:nodes -commonname $using:commonname -serviceFabricPackageUrl $using:serviceFabricPackageUrl"
                     $result = Invoke-Expression -Command ("powershell.exe -file $using:installScript " `
@@ -120,7 +120,8 @@ configuration SFStandaloneInstall
 
             TestScript = { 
                 
-                    bool $retval = $false
+                    $retval = $false
+                    
                     if($firstNode)
                     {   
                         write-host "testscript first node"
