@@ -78,7 +78,9 @@ configuration SFStandaloneInstall
     
         for($i = 0; $i -lt $virtualMachineCount; $i++)
         {
-            [void]$nodes.Add("$virtualMachineNamePrefix$i")
+            $node = "$virtualMachineNamePrefix$i"
+            write-host "adding node to list: $node"
+            [void]$nodes.Add($node)
         }
 
         if($nodes[0] -imatch $env:COMPUTERNAME)
