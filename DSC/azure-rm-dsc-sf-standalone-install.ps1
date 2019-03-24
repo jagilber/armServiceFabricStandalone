@@ -8,6 +8,7 @@
     Modify thumbprint in C:\temp\Microsoft.Azure.ServiceFabric.WindowsServer.latest\ClusterConfig.X509.OneNode.json
 #>
 param(
+    [PSCredential]$userAccount,
     [string]$thumbprint,
     [string]$virtualMachineNamePrefix,
     [int]$virtualMachineCount,
@@ -106,11 +107,11 @@ function main()
     }
 
     # read and modify config with thumb and nodes if first node
-    $nodes = @()
+    $nodes = [collections.arraylist]@()
 
     for ($i = 0; $i -lt $virtualMachineCount; $i++)
     {
-        $nodes.Add("$virtualMachineNamePrefix$i")
+        [void]$nodes.Add("$virtualMachineNamePrefix$i")
     }
 
     log-info "nodes count: $($nodes.count)"
@@ -281,8 +282,9 @@ function download-kvCert()
     $bytes = [convert]::FromBase64String($secret.SecretValueText)
     $certObject.Import($bytes, $null, [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable -bor [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet)
         
-    add-type -AssemblyName System.Web
-    $password = [Web.Security.Membership]::GeneratePassword(38, 5)
+    #add-type -AssemblyName System.Web
+    #$password = [Web.Security.Membership]::GeneratePassword(38, 5)
+    $password = $useraccount.password
     log-info "setting cert password: $password"
     $protectedCertificateBytes = $certObject.Export([Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12, $password)
 

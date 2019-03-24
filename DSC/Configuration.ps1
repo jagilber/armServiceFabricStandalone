@@ -74,11 +74,11 @@ configuration SFStandaloneInstall
 
         $credential = new-object Management.Automation.PSCredential -ArgumentList ".\$($userAccount.Username)", $userAccount.Password
         $firstNode = $false
-        $nodes = @()
+        $nodes = [collections.arraylist]@()
     
         for($i = 0; $i -lt $virtualMachineCount; $i++)
         {
-            $nodes.Add("$virtualMachineNamePrefix$i")
+            [void]$nodes.Add("$virtualMachineNamePrefix$i")
         }
 
         if($nodes[0] -imatch $env:COMPUTERNAME)
@@ -120,6 +120,7 @@ configuration SFStandaloneInstall
                         + "-azureSecret $using:azureSecret " `
                         + "-azureTenant $using:azureTenant " `
                         + "-sourceVaultValue $using:sourceVaultValue " `
+                        + "-UserAccount $using:userAccount " `
                         + "-certificateUrlValue $using:certificateUrlValue") -Verbose -Debug
                     
                     write-host "invoke result: $result"
