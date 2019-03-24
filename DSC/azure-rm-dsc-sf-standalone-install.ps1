@@ -263,15 +263,15 @@ function download-kvCert()
     log-info "getting secret '$keyVaultSecretName' from keyvault '$keyVaultName'..."
     $secret = get-azurekeyVaultSecret -vaultname $keyVaultName -name $keyVaultSecretName
 
-    $certCollection = New-Object Security.Cryptography.X509Certificates.X509Certificate2Collection
+    $certObject = New-Object Security.Cryptography.X509Certificates.X509Certificate2
 
     $bytes = [convert]::FromBase64String($secret.SecretValueText)
-    $certCollection.Import($bytes, $null, [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable -bor [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet)
+    $certObject.Import($bytes, $null, [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable -bor [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet)
         
     add-type -AssemblyName System.Web
     $password = [Web.Security.Membership]::GeneratePassword(38, 5)
     log-info "setting cert password: $password"
-    $protectedCertificateBytes = $certCollection.Export([Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12, $password)
+    $protectedCertificateBytes = $certObject.Export([Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12, $password)
 
     $pfxFilePath = "$PSScriptRoot\$keyVaultSecretName.pfx"
     log-info "saving cert to: $pfxFilePath"
@@ -280,7 +280,7 @@ function download-kvCert()
     log-info "import certificate to current user Certificate store"
     $Certificatestore = New-Object System.Security.Cryptography.X509Certificates.X509Store -argumentlist "My","Currentuser"
     $Certificatestore.open("readWrite")
-    $Certificatestore.Add($certCollection)
+    $Certificatestore.Add($certObject)
     $Certificatestore.Close()
 
 }
