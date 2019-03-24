@@ -194,8 +194,11 @@ function main()
     if ($remove)
     {
         log-info "removing cluster"
-        .\RemoveServiceFabricCluster.ps1 -ClusterConfigFilePath $configurationFileMod -Force
-        .\CleanFabric.ps1
+        $result = .\RemoveServiceFabricCluster.ps1 -ClusterConfigFilePath $configurationFileMod -Force
+        log-info "remove result: $result"
+        $result = .\CleanFabric.ps1
+        log-info "clean result: $result"
+        $error.Clear()
     }
     else
     {
@@ -210,6 +213,7 @@ function main()
             return 1
         }
 
+        $error.Clear()
         log-info "creating cluster"
         $result = .\CreateServiceFabricCluster.ps1 -ClusterConfigFilePath $configurationFileMod `
             -AcceptEULA `
@@ -227,8 +231,6 @@ function main()
     }
 
     finish-script
-    # todo remove
-    $error.Clear()
 
     if (!$error)
     {

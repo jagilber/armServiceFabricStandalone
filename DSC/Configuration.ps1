@@ -57,7 +57,7 @@ configuration SFStandaloneInstall
     Import-DscResource -ModuleName PSDesiredStateConfiguration
     write-host "current location: $((get-location).path)"
     write-host "useraccount: $($useraccount.username)"
-    Write-host "install script:$installScript"
+    Write-host "install script: $installScript"
 
     Node localhost {
 
@@ -91,7 +91,8 @@ configuration SFStandaloneInstall
 
             SetScript            = { 
                 write-host "powershell.exe -file $using:installScript -thumbprint $using:thumbprint -virtualMachineNamePrefix $using:virtualMachineNamePrefix -commonname $using:commonname -serviceFabricPackageUrl $using:serviceFabricPackageUrl"
-                $result = Invoke-Expression -Command ("powershell.exe -file $using:installScript " `
+                $result = Invoke-Expression -Command ("powershell.exe " `
+                        + "-file $using:installScript " `
                         + "-thumbprint $using:thumbprint " `
                         + "-virtualMachineNamePrefix $using:virtualMachineNamePrefix " `
                         + "-virtualMachineCount $using:virtualMachineCount " `
