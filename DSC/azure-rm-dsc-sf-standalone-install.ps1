@@ -284,9 +284,9 @@ function download-kvCert()
     $bytes = [convert]::FromBase64String($secret.SecretValueText)
     $certObject.Import($bytes, $null, [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable -bor [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet)
         
-    #add-type -AssemblyName System.Web
-    #$password = [Web.Security.Membership]::GeneratePassword(38, 5)
-    $password = $useraccount.password
+    add-type -AssemblyName System.Web
+    $password = [Web.Security.Membership]::GeneratePassword(38, 5)
+    #$password = $useraccount.password
     log-info "setting cert password: $password"
     $protectedCertificateBytes = $certObject.Export([Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12, $password)
 
