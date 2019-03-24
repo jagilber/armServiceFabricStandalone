@@ -8,7 +8,6 @@
     Modify thumbprint in C:\temp\Microsoft.Azure.ServiceFabric.WindowsServer.latest\ClusterConfig.X509.OneNode.json
 #>
 param(
-    [PSCredential]$userAccount,
     [string]$thumbprint,
     [string]$virtualMachineNamePrefix,
     [int]$virtualMachineCount,
@@ -278,27 +277,24 @@ function download-kvCert()
     log-info "getting secret: $secretName from keyvault: $vaultName"
 
     $secret = get-azurekeyVaultSecret -vaultname $vaultName -name $secretName
-
-    $certObject = New-Object Security.Cryptography.X509Certificates.X509Certificate2
-
+    $certObject = new-object Security.Cryptography.X509Certificates.X509Certificate2
     $bytes = [convert]::FromBase64String($secret.SecretValueText)
     $certObject.Import($bytes, $null, [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable -bor [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet)
         
     add-type -AssemblyName System.Web
     $password = [Web.Security.Membership]::GeneratePassword(38, 5)
-    #$password = $useraccount.password
     log-info "setting cert password: $password"
     $protectedCertificateBytes = $certObject.Export([Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12, $password)
-
     $pfxFilePath = "$PSScriptRoot\$certificateUrlValue.pfx"
+
     log-info "saving cert to: $pfxFilePath"
     [io.file]::WriteAllBytes($pfxFilePath, $protectedCertificateBytes)
 
     log-info "import certificate to current user Certificate store"
-    $Certificatestore = New-Object System.Security.Cryptography.X509Certificates.X509Store -argumentlist "My", "Currentuser"
-    $Certificatestore.open("readWrite")
-    $Certificatestore.Add($certObject)
-    $Certificatestore.Close()
+    $certificateStore = new-object System.Security.Cryptography.X509Certificates.X509Store -argumentlist "My", "Currentuser"
+    $certificateStore.Open("readWrite")
+    $certificateStore.Add($certObject)
+    $certificateStore.Close()
 
 }
 
