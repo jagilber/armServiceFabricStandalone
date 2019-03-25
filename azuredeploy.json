@@ -29,13 +29,6 @@
         "description": "optional: azure client id secret to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
       }
     },
-    "azureTenant": {
-      "defaultValue": "optional",
-      "type": "string",
-      "metadata": {
-        "description": "optional: azure tenant to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
-      }
-    },
     "certificateCommonName": {
       "defaultValue": "",
       "type": "string",
@@ -284,7 +277,7 @@
                 "serviceFabricPackageUrl": "[parameters('serviceFabricPackageUrl')]",
                 "azureClientId": "[parameters('azureClientId')]",
                 "azureSecret": "[parameters('azureSecret')]",
-                "azureTenant": "[parameters('azureTenant')]",
+                "azureTenant": "[subscription().tenantId]",
                 "sourceVaultValue": "[parameters('sourceVaultValue')]",
                 "certificateUrlValue": "[parameters('certificateUrlValue')]",
                 "virtualMachineCount": "[parameters('virtualMachineCount')]"

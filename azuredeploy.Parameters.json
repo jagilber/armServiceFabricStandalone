@@ -9,13 +9,10 @@
       "value": ""
     },
     "azureClientId": {
-      "value": ""
+      "value": "optional"
     },
     "azureSecret": {
-      "value": ""
-    },
-    "azureTenant": {
-      "value": ""
+      "value": "optional"
     },
     "certificateCommonName": {
       "value": ""
