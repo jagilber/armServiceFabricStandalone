@@ -262,7 +262,7 @@
           "apiVersion": "2018-10-01",
           "location": "[resourceGroup().location]",
           "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineNamePrefix'),copyIndex())]"
+            "[concat(parameters('virtualMachineNamePrefix'), padLeft(copyIndex(), 7, '0'))]"
           ],
           "properties": {
             "publisher": "Microsoft.Powershell",
