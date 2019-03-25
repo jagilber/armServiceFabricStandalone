@@ -174,6 +174,7 @@ function main()
     $json = Get-Content -Raw $configurationFileMod | convertfrom-json
     $nodeList = [collections.arraylist]@()
     $count = 0
+    $isSeedNode = $true
 
     log-info "adding nodes"
 
@@ -186,10 +187,12 @@ function main()
                 nodeTypeRef   = "NodeType0"
                 faultDomain   = "fd:/dc1/r$count"
                 upgradeDomain = "UD$count"
+                isSeedNode    = $isSeedNode.tostring()
             })
         
         if(++$count -gt 4)
         {
+            $isSeedNode = $false
             $count = 0
         }
         
