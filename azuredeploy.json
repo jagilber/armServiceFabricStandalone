@@ -47,7 +47,7 @@
       "defaultValue": "",
       "type": "string",
       "metadata": {
-        "description": "keyvault certificate url"
+        "description": "keyvault certificate url. example: https://sfsa.vault.azure.net/secrets/sfsa/75bcb8695bcb4ac6ba103b7bbfd05822"
       }
     },
     "operatingSystem": {
@@ -58,7 +58,8 @@
       },
       "allowedValues": [
         "Server2012R2",
-        "Server2016"
+        "Server2016",
+        "Server2019"
       ]
     },
     "serviceFabricPackageUrl": {
@@ -72,7 +73,7 @@
       "defaultValue": "",
       "type": "string",
       "metadata": {
-        "description": "certificate keyvault resource id"
+        "description": "certificate keyvault resource id. example: /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/certssfsa/providers/Microsoft.KeyVault/vaults/sfsa"
       }
     },
     "virtualMachineNamePrefix": {
@@ -123,6 +124,11 @@
         "PublisherValue": "MicrosoftWindowsServer",
         "OfferValue": "WindowsServer",
         "SkuValue": "2016-Datacenter-with-containers"
+      },
+      "Server2019": {
+        "PublisherValue": "MicrosoftWindowsServer",
+        "OfferValue": "WindowsServer",
+        "SkuValue": "2019-Datacenter-with-containers"
       }
     },
     "availabilitySetPlatformFaultDomainCount": "2",
