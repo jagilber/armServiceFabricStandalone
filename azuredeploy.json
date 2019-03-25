@@ -16,21 +16,21 @@
       }
     },
     "azureClientId": {
-      "defaultValue": "",
+      "defaultValue": "optional",
       "type": "string",
       "metadata": {
         "description": "optional: azure client id to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
       }
     },
     "azureSecret": {
-      "defaultValue": "",
+      "defaultValue": "optional",
       "type": "string",
       "metadata": {
         "description": "optional: azure client id secret to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
       }
     },
     "azureTenant": {
-      "defaultValue": "",
+      "defaultValue": "optional",
       "type": "string",
       "metadata": {
         "description": "optional: azure tenant to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
@@ -54,7 +54,7 @@
       "defaultValue": "",
       "type": "string",
       "metadata": {
-        "description": "certificate url"
+        "description": "keyvault certificate url"
       }
     },
     "fileUris": {
@@ -62,20 +62,6 @@
       "type": "string",
       "metadata": {
         "description": "dsc DSC.zip download url"
-      }
-    },
-    "sourceVaultValue": {
-      "defaultValue": "",
-      "type": "string",
-      "metadata": {
-        "description": "optional: azure key vault name to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
-      }
-    },
-    "certificateUrlValue": {
-      "defaultValue": "",
-      "type": "string",
-      "metadata": {
-        "description": "optional: azure key vault secret name to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
       }
     },
     "operatingSystem": {

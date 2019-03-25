@@ -14,11 +14,11 @@ param(
     [Parameter(Mandatory=$false)]
     [string]$commonName = "",
     [Parameter(Mandatory=$false)]
-    [string]$azureClientId = "",
+    [string]$azureClientId = "optional",
     [Parameter(Mandatory=$false)]
-    [string]$azureSecret = "",
+    [string]$azureSecret = "optional",
     [Parameter(Mandatory=$false)]
-    [string]$azureTenant = "",
+    [string]$azureTenant = "optional",
     [string]$sourceVaultValue,
     [string]$certificateUrlValue,
     [string]$diagnosticShare,
@@ -103,7 +103,7 @@ function main()
 
 
     # if creds supplied, download cert and put into currentuser my store for cluster admin
-    if ($azureClientId -and $azureSecret -and $azureTenant)
+    if (($azureClientId -and $azureClientId -ine "optional") -and $azureSecret -and $azureTenant)
     {
         log-info "downloading cert from store"
         download-kvCert
