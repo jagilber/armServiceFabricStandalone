@@ -23,9 +23,6 @@
     "certificateUrlValue": {
       "value": ""
     },
-    "sourceVaultValue": {
-      "value": ""
-    },
     "keyVaultSecretName": {
       "value": ""
     },
