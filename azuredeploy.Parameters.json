@@ -45,7 +45,7 @@
       "value": 5
     },
     "virtualMachineNamePrefix": {
-      "value": "nt000000"
+      "value": "nt"
     },
     "virtualMachineSize": {
       "value": "Standard_DS2_v2"

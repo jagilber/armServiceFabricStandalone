@@ -198,7 +198,7 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[concat(parameters('virtualMachineNamePrefix'), copyIndex())]",
+      "name": "[concat(parameters('virtualMachineNamePrefix'), padLeft(copyindex(), 7, '0'))]",
       "apiVersion": "2017-03-30",
       "location": "[resourceGroup().location]",
       "copy": {
@@ -249,7 +249,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('virtualMachineNamePrefix'), copyIndex(), '-NIC1'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('virtualMachineNamePrefix'), padLeft(copyindex(), 7, '0'), '-NIC1'))]"
             }
           ]
         },
@@ -314,12 +314,12 @@
       "dependsOn": [
         "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]",
         "[concat('Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]",
-        "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('virtualMachineNamePrefix'), copyIndex(), '-NIC1'))]"
+        "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('virtualMachineNamePrefix'), padLeft(copyindex(), 7, '0'), '-NIC1'))]"
       ]
     },
     {
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(parameters('virtualMachineNamePrefix'), copyIndex(), '-NIC1')]",
+      "name": "[concat(parameters('virtualMachineNamePrefix'), padLeft(copyindex(), 7, '0'), '-NIC1')]",
       "apiVersion": "2016-03-30",
       "location": "[resourceGroup().location]",
       "copy": {
@@ -333,7 +333,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('virtualMachineNamePrefix'), copyIndex(), '-PIP1'))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('virtualMachineNamePrefix'), padLeft(copyindex(), 7, '0'), '-PIP1'))]"
               },
               "subnet": {
                 "id": "[variables('subnetRef')]"
@@ -347,21 +347,21 @@
         "enableIPForwarding": false
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('virtualMachineNamePrefix'), copyIndex(), '-PIP1'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('virtualMachineNamePrefix'), padLeft(copyindex(), 7, '0'), '-PIP1'))]",
         "[resourceId('Microsoft.Network/virtualNetworks/', variables('myVNETName'))]"
       ]
     },
     {
       "apiVersion": "2016-03-30",
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[concat(parameters('virtualMachineNamePrefix'), copyIndex(), '-PIP1')]",
+      "name": "[concat(parameters('virtualMachineNamePrefix'), padLeft(copyindex(), 7, '0'), '-PIP1')]",
       "location": "[resourceGroup().location]",
       "copy": {
         "name": "PIPCopy",
         "count": "[parameters('virtualMachineCount')]"
       },
       "tags": {
-        "displayName": "[concat(parameters('virtualMachineNamePrefix'), copyIndex(), '-PIP1')]"
+        "displayName": "[concat(parameters('virtualMachineNamePrefix'), padLeft(copyindex(), 7, '0'), '-PIP1')]"
       },
       "properties": {
         "publicIPAllocationMethod": "Dynamic",

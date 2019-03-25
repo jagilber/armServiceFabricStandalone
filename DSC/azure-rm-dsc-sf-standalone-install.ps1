@@ -114,7 +114,7 @@ function main()
 
     for ($i = 0; $i -lt $virtualMachineCount; $i++)
     {
-        $node = "$virtualMachineNamePrefix$i"
+        $node = "$virtualMachineNamePrefix$($i.tostring('D7'))"
         write-host "adding node to list: $node"
         [void]$nodes.Add($node)
     }
