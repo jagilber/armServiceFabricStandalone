@@ -188,7 +188,11 @@ function main()
                 upgradeDomain = "UD$count"
             })
         
-        $count++
+        if(++$count -gt 4)
+        {
+            $count = 0
+        }
+        
     }
 
     $json.nodes = $nodeList.toarray()
