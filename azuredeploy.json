@@ -76,7 +76,7 @@
       }
     },
     "virtualMachineNamePrefix": {
-      "defaultValue": "nt000000",
+      "defaultValue": "nt",
       "type": "string",
       "maxLength": 15,
       "metadata": {
