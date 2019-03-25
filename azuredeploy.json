@@ -57,13 +57,6 @@
         "description": "keyvault certificate url"
       }
     },
-    "fileUris": {
-      "defaultValue": "https://raw.githubusercontent.com/jagilber/armServiceFabricStandalone/master/DSC/DSC.zip",
-      "type": "string",
-      "metadata": {
-        "description": "dsc DSC.zip download url"
-      }
-    },
     "operatingSystem": {
       "type": "string",
       "defaultValue": "Server2016",
@@ -280,7 +273,7 @@
             "settings": {
               "wmfVersion": "latest",
               "configuration": {
-                "url": "[parameters('fileUris')]",
+                "url": "https://raw.githubusercontent.com/jagilber/armServiceFabricStandalone/master/DSC/DSC.zip",
                 "script": "configuration.ps1",
                 "function": "SFStandaloneInstall"
               },
