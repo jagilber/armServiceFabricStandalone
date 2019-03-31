@@ -125,7 +125,7 @@
     "availabilitySetName": "sfsaAvailabilitySet",
     "dnsPrefixForPublicIP": "[resourceGroup().name]",
     "lbApiVersion": "2015-06-15",
-    "lbIDP": "[resourceId('Microsoft.Network/loadBalancers', concat('LBP','-', parameters('dnsName')))]",
+    "lbIDP": "[resourceId('Microsoft.Network/loadBalancers', concat('LBP-', parameters('dnsName')))]",
     "lbIPConfigP": "[concat(variables('lbIDP'),'/frontendIPConfigurations/LoadBalancerIPConfig')]",
     "lbPoolIDP": "[concat(variables('lbIDP'),'/backendAddressPools/LoadBalancerBEAddressPool')]",
     "lbProbeIDP": "[concat(variables('lbIDP'),'/probes/FabricGatewayProbe')]",
@@ -176,12 +176,34 @@
       }
     },
     {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/loadBalancers/inboundNatRules",
+      "name": "[concat('LBP-', parameters('dnsName'), '/', 'RDP-VM', copyIndex())]",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "lbNatLoop",
+        "count": "[parameters('virtualMachineCount')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/loadBalancers/', 'LBP-', parameters('dnsName'))]"
+      ],
+      "properties": {
+        "frontendIPConfiguration": {
+          "id": "[variables('lbIPConfigP')]"
+        },
+        "protocol": "Tcp",
+        "frontendPort": "[copyIndex(3389)]",
+        "backendPort": 3389,
+        "enableFloatingIP": false
+      }
+    },
+    {
       "apiVersion": "[variables('lbApiVersion')]",
       "type": "Microsoft.Network/loadBalancers",
-      "name": "[concat('LBP','-', parameters('dnsName'))]",
+      "name": "[concat('LBP-', parameters('dnsName'))]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
+        "[concat('Microsoft.Network/virtualNetworks/', variables('vNETName'))]"
       ],
       "properties": {
         "frontendIPConfigurations": [
@@ -480,7 +502,7 @@
               ],
               "loadBalancerInboundNatPools": [
                 {
-                  "id": "[variables('lbNatPoolIDP')]"
+                  "id": "[concat(variables('lbNatPoolIDP'), '/inboundNatRules/RDP-VM', copyIndex())]"
                 }
               ]
             }
@@ -493,7 +515,9 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('virtualMachineNamePrefix'), padLeft(copyIndex(), 7, '0'), '-PIP1'))]",
-        "[resourceId('Microsoft.Network/virtualNetworks/', variables('vNETName'))]"
+        "[resourceId('Microsoft.Network/virtualNetworks/', variables('vNETName'))]",
+        "[resourceId('Microsoft.Network/loadBalancers', concat('LBP-', parameters('dnsName')))]",
+        "[concat('Microsoft.Network/loadBalancers/', 'LBP-', parameters('dnsName'), '/inboundNatRules/RDP-VM', copyIndex())]"
       ]
     },
     {
