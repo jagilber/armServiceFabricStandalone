@@ -176,7 +176,7 @@
       }
     },
     {
-      "apiVersion": "2015-06-15",
+      "apiVersion": "2018-11-01",
       "type": "Microsoft.Network/loadBalancers/inboundNatRules",
       "name": "[concat('LBP-', parameters('dnsName'), '/', 'RDP-VM', copyIndex())]",
       "location": "[resourceGroup().location]",
@@ -489,9 +489,6 @@
             "name": "ipconfig1",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('virtualMachineNamePrefix'), padLeft(copyIndex(), 7, '0'), '-PIP1'))]"
-              },
               "subnet": {
                 "id": "[variables('subnetRef')]"
               },
@@ -500,9 +497,9 @@
                   "id": "[variables('lbPoolIDP')]"
                 }
               ],
-              "loadBalancerInboundNatPools": [
+              "loadBalancerInboundNatRules": [
                 {
-                  "id": "[concat(variables('lbNatPoolIDP'), '/inboundNatRules/RDP-VM', copyIndex())]"
+                  "id": "[concat(variables('lbIDP'), '/inboundNatRules/RDP-VM', copyIndex())]"
                 }
               ]
             }
@@ -514,30 +511,10 @@
         "enableIPForwarding": false
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('virtualMachineNamePrefix'), padLeft(copyIndex(), 7, '0'), '-PIP1'))]",
         "[resourceId('Microsoft.Network/virtualNetworks/', variables('vNETName'))]",
         "[resourceId('Microsoft.Network/loadBalancers', concat('LBP-', parameters('dnsName')))]",
         "[concat('Microsoft.Network/loadBalancers/', 'LBP-', parameters('dnsName'), '/inboundNatRules/RDP-VM', copyIndex())]"
       ]
-    },
-    {
-      "apiVersion": "2016-03-30",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[concat(parameters('virtualMachineNamePrefix'), padLeft(copyIndex(), 7, '0'), '-PIP1')]",
-      "location": "[resourceGroup().location]",
-      "copy": {
-        "name": "PIPCopy",
-        "count": "[parameters('virtualMachineCount')]"
-      },
-      "tags": {
-        "displayName": "[concat(parameters('virtualMachineNamePrefix'), padLeft(copyIndex(), 7, '0'), '-PIP1')]"
-      },
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "dnsSettings": {
-          "domainNameLabel": "[concat(variables('dnsPrefixForPublicIP'), copyIndex())]"
-        }
-      }
     }
   ],
   "outputs": {}
