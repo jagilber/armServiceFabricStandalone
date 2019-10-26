@@ -65,8 +65,19 @@ function main()
             return 1
         }
 
-        #$certFile = "c:\programdata\microsoft\crypto\rsa\machinekeys\$machineKeyFileName"
-        $certFile = "c:\programdata\microsoft\crypto\keys\$machineKeyFileName"
+        $certFile = "c:\programdata\microsoft\crypto\rsa\machinekeys\$machineKeyFileName"
+        
+        if(!(test-path $certFile))
+        {
+            $certFile = "c:\programdata\microsoft\crypto\keys\$machineKeyFileName"
+        }
+
+        if(!(test-path $certFile))
+        {
+            Write-Error "unable to find $certFile"
+            return
+        }
+
         log-info "cert file: $certFile"
         log-info "cert file: $(cacls $certFile)"
 
