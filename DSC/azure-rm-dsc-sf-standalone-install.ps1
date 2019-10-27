@@ -185,8 +185,12 @@ function main()
     }
     else 
     {
+        log-info "creating diagnostic store"
         md d:\diagnosticsStore
-        net share diagnosticsStore=d:\diagnosticsStore /GRANT:everyone,FULL
+        log-info "sharing diagnostic store"
+        icacls d:\diagnosticsStore /grant "NT AUTHORITY\NETWORK SERVICE:(OI)(CI)(F)"
+        net share diagnosticsStore=d:\diagnosticsStore /GRANT:everyone,FULL /GRANT:"NT AUTHORITY\NETWORK SERVICE",FULL
+        log-info (net share)
         $json = $json.Replace("c:\\ProgramData\\SF\\DiagnosticsStore","\\\\$($env:COMPUTERNAME)\\diagnosticsStore")
     }
 
