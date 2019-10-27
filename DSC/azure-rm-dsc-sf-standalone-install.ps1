@@ -178,7 +178,18 @@ function main()
     $json = $json.Replace("[Thumbprint]", $thumbprint)
     $json = $json.Replace("[IssuerCommonName]", $commonName)
     $json = $json.Replace("[CertificateCommonName]", $commonName)
-    
+        
+    if($diagnosticShare)
+    {
+        $json = $json.Replace("c:\\ProgramData\\SF\\DiagnosticsStore",$diagnosticShare)
+    }
+    else 
+    {
+        md d:\diagnosticsStore
+        net share diagnosticsStore=d:\diagnosticsStore /GRANT:everyone,FULL
+        $json = $json.Replace("c:\\ProgramData\\SF\\DiagnosticsStore","\\\\$($env:COMPUTERNAME)\\diagnosticsStore")
+    }
+
     log-info "saving json: $configurationFileMod"
     Out-File -InputObject $json -FilePath $configurationFileMod -Force
     # add nodes to json
