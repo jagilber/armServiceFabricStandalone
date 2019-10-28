@@ -127,7 +127,7 @@ function main() {
     log-info "nodes: $($nodes)"
 
     $Action = New-ScheduledTaskAction -Execute 'cmdkey.exe' -Argument "/general:$($nodes[0]) /user:$($credential.UserName) /pass:$($credential.Password)"
-    $Trigger = New-ScheduledTaskTrigger -Once -At "$((get-date).AddSeconds(1))"
+    $Trigger = New-ScheduledTaskTrigger -Once -At "$((get-date).AddSeconds(5))"
     $Settings = New-ScheduledTaskSettingsSet
     $Task = New-ScheduledTask -Action $Action -Trigger $Trigger -Settings $Settings
     Register-ScheduledTask -TaskName 'network service cmdkey' -InputObject $Task -User 'networkservice' # -Password 'passhere'
