@@ -80,7 +80,33 @@ configuration SFStandaloneInstall
             PasswordNeverExpires = $true
         }
 
+        # if password is empty, create a dummy one to allow have credentias for system accounts: 
+        #NT AUTHORITY\LOCAL SERVICE
+        #NT AUTHORITY\NETWORK SERVICE
+        $login = "nt authority\network service"
+        $secpassword = (new-object System.Security.SecureString)
+        $nScreds = New-Object System.Management.Automation.PSCredential ($login, $secpassword)
+        
         $credential = new-object Management.Automation.PSCredential -ArgumentList ".\$($userAccount.Username)", $userAccount.Password
+        
+        Script MapAzureShare
+        {
+            GetScript = 
+            {
+
+            }
+            TestScript = 
+            {
+                Invoke-Expression -Command "cmdkey /list"
+            }
+            SetScript = 
+            {
+                Invoke-Expression -Command "cmdkey /generic:nt0000000 /user:$($credential.UserName) /pass:$($credential.Password)"
+                #Invoke-Expression -Command "cmdkey /add:somestorage.file.core.windows.net /user:somestorage /pass:somekey"
+                #Invoke-Expression -Command "net use W: \\somestorage.file.core.windows.net\someshare"
+            }
+            PsDscRunAsCredential = $nScreds
+        }
 
         Script Install-Standalone
         {
@@ -110,8 +136,7 @@ configuration SFStandaloneInstall
                         + "-azureSecret $using:azureSecret " `
                         + "-azureTenant $using:azureTenant " `
                         + "-sourceVaultValue $using:sourceVaultValue " `
-                        + "-certificateUrlValue $using:certificateUrlValue " `
-                        + "-credential $using:useraccount") -Verbose -Debug
+                        + "-certificateUrlValue $using:certificateUrlValue") -Verbose -Debug
                     
                 write-host "invoke result: $result"
                 return @{ Result = $result}

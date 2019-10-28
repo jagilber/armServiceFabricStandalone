@@ -28,8 +28,8 @@ param(
     [string]$serviceFabricPackageUrl = "https://go.microsoft.com/fwlink/?LinkId=730690",
     [string]$packageName = "Microsoft.Azure.ServiceFabric.WindowsServer.latest.zip",
     [string]$subnetPrefix = "10",
-    [int]$timeout = 1200,
-    [pscredential]$credential
+    [int]$timeout = 1200 #,
+   # [pscredential]$credential
 )
 
 $erroractionpreference = "continue"
@@ -126,11 +126,11 @@ function main() {
     log-info "nodes count: $($nodes.count)"
     log-info "nodes: $($nodes)"
 
-    $Action = New-ScheduledTaskAction -Execute 'cmdkey.exe' -Argument "/general:$($nodes[0]) /user:$($credential.UserName) /pass:$($credential.Password)"
-    $Trigger = New-ScheduledTaskTrigger -Once -At "$((get-date).AddSeconds(5))"
-    $Settings = New-ScheduledTaskSettingsSet
-    $Task = New-ScheduledTask -Action $Action -Trigger $Trigger -Settings $Settings
-    Register-ScheduledTask -TaskName 'network service cmdkey' -InputObject $Task -User 'networkservice' # -Password 'passhere'
+    #$Action = New-ScheduledTaskAction -Execute 'cmdkey.exe' -Argument "/general:$($nodes[0]) /user:$($credential.UserName) /pass:$($credential.Password)"
+    #$Trigger = New-ScheduledTaskTrigger -Once -At "$((get-date).AddSeconds(5))"
+    #$Settings = New-ScheduledTaskSettingsSet
+    #$Task = New-ScheduledTask -Action $Action -Trigger $Trigger -Settings $Settings
+    #Register-ScheduledTask -TaskName 'network service cmdkey' -InputObject $Task -User 'networkservice' # -Password 'passhere'
 
     if ($nodes[0] -inotmatch $env:COMPUTERNAME) {
         log-info "$env:COMPUTERNAME is not first node. exiting..."
