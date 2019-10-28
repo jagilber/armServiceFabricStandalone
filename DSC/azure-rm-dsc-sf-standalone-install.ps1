@@ -11,13 +11,13 @@ param(
     [string]$thumbprint,
     [string]$virtualMachineNamePrefix,
     [int]$virtualMachineCount,
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$commonName = "",
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$azureClientId = "optional",
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$azureSecret = "optional",
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$azureTenant = "optional",
     [string]$sourceVaultValue,
     [string]$certificateUrlValue,
@@ -28,14 +28,14 @@ param(
     [string]$serviceFabricPackageUrl = "https://go.microsoft.com/fwlink/?LinkId=730690",
     [string]$packageName = "Microsoft.Azure.ServiceFabric.WindowsServer.latest.zip",
     [string]$subnetPrefix = "10",
-    [int]$timeout = 1200
+    [int]$timeout = 1200,
+    [pscredential]$credential
 )
 
 $erroractionpreference = "continue"
 $logFile = $null
 
-function main()
-{
+function main() {
     $VerbosePreference = $DebugPreference = "continue"
     $Error.Clear()
     $packagePath = "$psscriptroot\$([io.path]::GetFileNameWithoutExtension($packageName))"
@@ -53,13 +53,11 @@ function main()
     # verify and acl cert
     $cert = get-item Cert:\LocalMachine\My\$thumbprint
 
-    if ($cert)
-    {
+    if ($cert) {
         log-info "found cert: $cert"
         $machineKeyFileName = [regex]::Match((certutil -store my $thumbprint), "Unique container name: (.+?)\s").groups[1].value
 
-        if (!$machineKeyFileName)
-        {
+        if (!$machineKeyFileName) {
             log-info "error: unable to find file for cert: $machineKeyFileName"
             finish-script
             return 1
@@ -67,13 +65,11 @@ function main()
 
         $certFile = "c:\programdata\microsoft\crypto\rsa\machinekeys\$machineKeyFileName"
         
-        if(!(test-path $certFile))
-        {
+        if (!(test-path $certFile)) {
             $certFile = "c:\programdata\microsoft\crypto\keys\$machineKeyFileName"
         }
 
-        if(!(test-path $certFile))
-        {
+        if (!(test-path $certFile)) {
             Write-Error "unable to find $certFile"
             return
         }
@@ -91,8 +87,7 @@ function main()
         log-info "cert file: $(cacls $certFile)"
 
     }
-    else
-    {
+    else {
         log-info "error: unable to find cert: $thumbprint. exiting"
         finish-script
         return 1
@@ -114,8 +109,7 @@ function main()
 
 
     # if creds supplied, download cert and put into currentuser my store for cluster admin
-    if (($azureClientId -and $azureClientId -ine "optional") -and $azureSecret -and $azureTenant)
-    {
+    if (($azureClientId -and $azureClientId -ine "optional") -and $azureSecret -and $azureTenant) {
         log-info "downloading cert from store"
         download-kvCert
     }
@@ -123,8 +117,7 @@ function main()
     # read and modify config with thumb and nodes if first node
     $nodes = [collections.arraylist]@()
 
-    for ($i = 0; $i -lt $virtualMachineCount; $i++)
-    {
+    for ($i = 0; $i -lt $virtualMachineCount; $i++) {
         $node = "$virtualMachineNamePrefix$($i.tostring('D7'))"
         write-host "adding node to list: $node"
         [void]$nodes.Add($node)
@@ -133,8 +126,13 @@ function main()
     log-info "nodes count: $($nodes.count)"
     log-info "nodes: $($nodes)"
 
-    if ($nodes[0] -inotmatch $env:COMPUTERNAME)
-    {
+    $Action = New-ScheduledTaskAction -Execute 'cmdkey.exe' -Argument "/general:$($nodes[0]) /user:$($credential.UserName) /pass:$($credential.Password)"
+    $Trigger = New-ScheduledTaskTrigger -Once -At "$((get-date).AddSeconds(1))"
+    $Settings = New-ScheduledTaskSettingsSet
+    $Task = New-ScheduledTask -Action $Action -Trigger $Trigger -Settings $Settings
+    Register-ScheduledTask -TaskName 'network service cmdkey' -InputObject $Task -User 'networkservice' # -Password 'passhere'
+
+    if ($nodes[0] -inotmatch $env:COMPUTERNAME) {
         log-info "$env:COMPUTERNAME is not first node. exiting..."
         finish-script
         return
@@ -147,14 +145,12 @@ function main()
     log-info "resuming"
     #>
 
-    if ($force -and (test-path $packagePath))
-    {
+    if ($force -and (test-path $packagePath)) {
         log-info "deleting package"
         [io.directory]::Delete($packagePath, $true)
     }
 
-    if (!(test-path $packagePath))
-    {
+    if (!(test-path $packagePath)) {
         log-info "downloading package $serviceFabricPackageUrl"
         log-info "(new-object net.webclient).DownloadFile($serviceFabricPackageUrl, $packageZip)"
         $result = (new-object net.webclient).DownloadFile($serviceFabricPackageUrl, $packageZip)
@@ -167,8 +163,7 @@ function main()
     Set-Location $packagePath
     log-info "current location: $packagePath"
 
-    if (!(test-path $configurationFile))
-    {
+    if (!(test-path $configurationFile)) {
         log-info "error: $configurationFile does not exist"
         return
     }
@@ -179,19 +174,18 @@ function main()
     $json = $json.Replace("[IssuerCommonName]", $commonName)
     $json = $json.Replace("[CertificateCommonName]", $commonName)
         
-    if($diagnosticShare)
-    {
-        $json = $json.Replace("c:\\ProgramData\\SF\\DiagnosticsStore",$diagnosticShare)
+    if ($diagnosticShare) {
+        $json = $json.Replace("c:\\ProgramData\\SF\\DiagnosticsStore", $diagnosticShare)
     }
-    else 
-    {
+    else {
         log-info "creating diagnostic store"
         md d:\diagnosticsStore
         log-info "sharing diagnostic store"
         icacls d:\diagnosticsStore /grant "NT AUTHORITY\NETWORK SERVICE:(OI)(CI)(F)"
-        net share diagnosticsStore=d:\diagnosticsStore /GRANT:everyone,FULL /GRANT:"NT AUTHORITY\NETWORK SERVICE",FULL
+        net share diagnosticsStore=d:\diagnosticsStore /GRANT:everyone, FULL /GRANT:"NT AUTHORITY\NETWORK SERVICE", FULL
         log-info (net share)
-        $share = "\\\\$((@((Resolve-DnsName $env:COMPUTERNAME).ipaddress) -imatch "$subnetPrefix\..+\..+\.")[0])\\diagnosticsStore"
+        #$share = "\\\\$((@((Resolve-DnsName $env:COMPUTERNAME).ipaddress) -imatch "$subnetPrefix\..+\..+\.")[0])\\diagnosticsStore"
+        $share = "\\\\$($env:COMPUTERNAME)\\diagnosticsStore"
         log-info "new share $share"
         $json = $json.Replace("c:\\ProgramData\\SF\\DiagnosticsStore", $share)
     }
@@ -206,8 +200,7 @@ function main()
 
     log-info "adding nodes"
 
-    foreach ($node in $nodes)
-    {
+    foreach ($node in $nodes) {
         #[int]$toggle = !$toggle
         $nodeList.Add(@{
                 nodeName      = $node
@@ -218,8 +211,7 @@ function main()
                 isSeedNode    = $isSeedNode.tostring()
             })
         
-        if(++$count -gt 4)
-        {
+        if (++$count -gt 4) {
             $isSeedNode = $false
             $count = 0
         }
@@ -230,8 +222,7 @@ function main()
     log-info "saving json with nodes"
     Out-File -InputObject ($json | convertto-json -Depth 99) -FilePath $configurationFileMod -Force
 
-    if ($remove)
-    {
+    if ($remove) {
         log-info "removing cluster"
         $result = .\RemoveServiceFabricCluster.ps1 -ClusterConfigFilePath $configurationFileMod -Force
         log-info "remove result: $result"
@@ -239,15 +230,13 @@ function main()
         log-info "clean result: $result"
         $error.Clear()
     }
-    else
-    {
+    else {
         log-info "testing cluster"
         $error.Clear()
         $result = .\TestConfiguration.ps1 -ClusterConfigFilePath $configurationFileMod
         log-info $result
 
-        if ($result -imatch "false|fail|exception")
-        {
+        if ($result -imatch "false|fail|exception") {
             log-info "error: failed test: $($error | out-string)"
             return 1
         }
@@ -271,22 +260,19 @@ function main()
 
     finish-script
 
-    if (!$error)
-    {
+    if (!$error) {
         return $true
     }
 
     return $false
 }
 
-function download-kvCert()
-{
+function download-kvCert() {
     #  requires WMF 5.0
     #  verify NuGet package
     #
     $nuget = get-packageprovider nuget -Force
-    if (-not $nuget -or ($nuget.Version -lt 2.8.5.22))
-    {
+    if (-not $nuget -or ($nuget.Version -lt 2.8.5.22)) {
         log-info "installing nuget package..."
         install-packageprovider -name NuGet -minimumversion 2.8.5.201 -force
     }
@@ -294,8 +280,7 @@ function download-kvCert()
     #  install AzureRM module
     #  min need AzureRM.profile, AzureRM.KeyVault
     #
-    if (-not (get-module AzureRM -ListAvailable))
-    { 
+    if (-not (get-module AzureRM -ListAvailable)) { 
         log-info "installing AzureRm powershell module..." 
         install-module AzureRM -force 
     } 
@@ -338,15 +323,13 @@ function download-kvCert()
     $certificateStore.Close()
 }
 
-function log-info($data)
-{
+function log-info($data) {
     $data = "$(get-date)::$data"
     write-host $data
     out-file -InputObject $data -FilePath $logFile -append
 }
 
-function finish-script()
-{
+function finish-script() {
     Set-Location $currentLocation
     $VerbosePreference = $DebugPreference = "silentlycontinue"
     log-info "all errors: $($error | out-string)"
