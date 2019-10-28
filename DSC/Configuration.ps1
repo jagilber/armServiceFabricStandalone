@@ -110,8 +110,8 @@ configuration SFStandaloneInstall
                         + "-azureSecret $using:azureSecret " `
                         + "-azureTenant $using:azureTenant " `
                         + "-sourceVaultValue $using:sourceVaultValue " `
-                        + "-certificateUrlValue $using:certificateUrlValue" `
-                        + "-credential $using:credential") -Verbose -Debug
+                        + "-certificateUrlValue $using:certificateUrlValue " `
+                        + "-credential $using:useraccount") -Verbose -Debug
                     
                 write-host "invoke result: $result"
                 return @{ Result = $result}
