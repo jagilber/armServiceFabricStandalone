@@ -182,7 +182,7 @@ function main() {
         md d:\diagnosticsStore
         log-info "sharing diagnostic store"
         icacls d:\diagnosticsStore /grant "NT AUTHORITY\NETWORK SERVICE:(OI)(CI)(F)"
-        net share diagnosticsStore=d:\diagnosticsStore /GRANT:everyone, FULL /GRANT:"NT AUTHORITY\NETWORK SERVICE", FULL
+        net share diagnosticsStore=d:\diagnosticsStore /GRANT:everyone,FULL /GRANT:"NT AUTHORITY\NETWORK SERVICE",FULL
         log-info (net share)
         #$share = "\\\\$((@((Resolve-DnsName $env:COMPUTERNAME).ipaddress) -imatch "$subnetPrefix\..+\..+\.")[0])\\diagnosticsStore"
         $share = "\\\\$($env:COMPUTERNAME)\\diagnosticsStore"
