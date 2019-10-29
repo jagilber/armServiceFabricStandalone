@@ -62,8 +62,7 @@ configuration SFStandaloneInstall
     }
     
     Import-DscResource -ModuleName PSDesiredStateConfiguration
-    Install-Module -Name xComputerManagement -Force -AcceptLicense
-    Import-DscResource -ModuleName xComputerManagement
+    Import-DscResource -ModuleName .\ComputerManagementDsc
     write-host "current location: $((get-location).path)"
     write-host "useraccount: $($useraccount.username)"
     Write-host "install script: $installScript"
@@ -148,6 +147,7 @@ configuration SFStandaloneInstall
 
 if ($thumbprint -and $virtualMachineNamePrefix -and $commonName) {
     write-host "sfstandaloneinstall"
+    #Install-Module -ModuleName ComputerManagementDsc
     SFStandaloneInstall -useraccount $UserAccount `
         -installScript $installScript `
         -thumbprint $thumbprint `
