@@ -62,6 +62,7 @@ configuration SFStandaloneInstall
     }
     
     Import-DscResource -ModuleName PSDesiredStateConfiguration
+    Install-Module -Name xComputerManagement -Force -AcceptLicense
     Import-DscResource -ModuleName xComputerManagement
     write-host "current location: $((get-location).path)"
     write-host "useraccount: $($useraccount.username)"
