@@ -4,17 +4,17 @@ param(
     [string]$thumbprint,
     [string]$virtualMachineNamePrefix,
     [int]$virtualMachineCount,
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$commonName = "",
     [string]$sourceVaultValue,
     [string]$certificateUrlValue,
     [string]$transcript,
     [string]$serviceFabricPackageUrl,
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$azureClientId = "",
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$azureSecret = "",
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$azureTenant = ""
 )
 
@@ -38,17 +38,17 @@ configuration SFStandaloneInstall
         [string]$thumbprint,
         [string]$virtualMachineNamePrefix,
         [int]$virtualMachineCount,
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string]$commonName = "",
         [string]$sourceVaultValue,
         [string]$certificateUrlValue,
         [string]$transcript = ".\transcript.log",
         [string]$serviceFabricPackageUrl,
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string]$azureClientId = "",
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string]$azureSecret = "",
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string]$azureTenant = ""
     )
     
@@ -56,21 +56,20 @@ configuration SFStandaloneInstall
     set-location $PSScriptRoot
     Start-Transcript -Path $transcript
         
-    foreach ($key in $MyInvocation.BoundParameters.keys)
-    {
+    foreach ($key in $MyInvocation.BoundParameters.keys) {
         $value = (get-variable $key).Value 
         write-host "$key -> $value"
     }
     
     Import-DscResource -ModuleName PSDesiredStateConfiguration
+    Import-DscResource -ModuleName xComputerManagement
     write-host "current location: $((get-location).path)"
     write-host "useraccount: $($useraccount.username)"
     Write-host "install script: $installScript"
 
     Node localhost {
 
-        User LocalUserAccount
-        {
+        User LocalUserAccount {
             Username             = $UserAccount.UserName
             Password             = $UserAccount
             Disabled             = $false
@@ -80,41 +79,26 @@ configuration SFStandaloneInstall
             PasswordNeverExpires = $true
         }
 
-        # if password is empty, create a dummy one to allow have credentias for system accounts: 
-        #NT AUTHORITY\LOCAL SERVICE
-        #NT AUTHORITY\NETWORK SERVICE
-        $login = "nt authority\network service"
-        $secpassword = (new-object System.Security.SecureString)
-        $nScreds = New-Object System.Management.Automation.PSCredential ($login, $secpassword)
-        
-        $credential = new-object Management.Automation.PSCredential -ArgumentList ".\$($userAccount.Username)", $userAccount.Password
-        
-        Script MapAzureShare
-        {
-            GetScript = 
-            {
+        #$network_service_cred = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ("NT AUTHORITY\NETWORK SERVICE", (ConvertTo-SecureString -String 'WhoCares' -AsPlainText -Force))
 
-            }
-            TestScript = 
-            {
-                Invoke-Expression -Command "cmdkey /list"
-            }
-            SetScript = 
-            {
-                Invoke-Expression -Command "cmdkey /generic:nt0000000 /user:$($credential.UserName) /pass:$($credential.Password)"
-                #Invoke-Expression -Command "cmdkey /add:somestorage.file.core.windows.net /user:somestorage /pass:somekey"
-                #Invoke-Expression -Command "net use W: \\somestorage.file.core.windows.net\someshare"
-            }
-            PsDscRunAsCredential = $nScreds
+        xScheduledTask 'cmdkey'
+        {
+            TaskName         = 'cmdkey'
+            TaskPath         = '\CustomTasks'
+            ActionExecutable = 'cmdkey.exe'
+            ActionArguments  = "/generic:nt0000000 /user:$($using:credential.UserName) /pass:$($using:credential.Password)"
+            ScheduleType     = 'Once'
+            StartTime        = "$((get-date).AddSeconds(10))"
+            BuiltInAccount   = 'NETWORK SERVICE'
+            LogonType        = 'ServiceAccount'
+            Enable           = $true
         }
 
-        Script Install-Standalone
-        {
+        Script Install-Standalone {
             GetScript            = {
                 $retval = $false
 
-                if ((get-itemProperty "HKLM:\SOFTWARE\Microsoft\Service Fabric" -ErrorAction SilentlyContinue).FabricVersion)
-                {
+                if ((get-itemProperty "HKLM:\SOFTWARE\Microsoft\Service Fabric" -ErrorAction SilentlyContinue).FabricVersion) {
                     $retval = $true
                 }
             
@@ -139,14 +123,13 @@ configuration SFStandaloneInstall
                         + "-certificateUrlValue $using:certificateUrlValue") -Verbose -Debug
                     
                 write-host "invoke result: $result"
-                return @{ Result = $result}
+                return @{ Result = $result }
             }
 
             TestScript           = { 
                 $retval = $false
 
-                if ((get-itemProperty "HKLM:\SOFTWARE\Microsoft\Service Fabric" -ErrorAction SilentlyContinue).FabricVersion)
-                {
+                if ((get-itemProperty "HKLM:\SOFTWARE\Microsoft\Service Fabric" -ErrorAction SilentlyContinue).FabricVersion) {
                     $retval = $true
                 }
             
@@ -162,8 +145,7 @@ configuration SFStandaloneInstall
     stop-transcript
 }
 
-if ($thumbprint -and $virtualMachineNamePrefix -and $commonName)
-{
+if ($thumbprint -and $virtualMachineNamePrefix -and $commonName) {
     write-host "sfstandaloneinstall"
     SFStandaloneInstall -useraccount $UserAccount `
         -installScript $installScript `
@@ -181,7 +163,6 @@ if ($thumbprint -and $virtualMachineNamePrefix -and $commonName)
 
     # Start-DscConfiguration .\SFStandaloneInstall -wait -force -debug -verbose
 }
-else
-{
+else {
     write-host "configuration.ps1: no args! exiting"
 }
