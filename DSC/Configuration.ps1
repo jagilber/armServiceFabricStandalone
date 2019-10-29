@@ -62,7 +62,7 @@ configuration SFStandaloneInstall
     }
     
     Import-DscResource -ModuleName PSDesiredStateConfiguration
-    Import-DscResource -ModuleName .\ComputerManagementDsc
+    Import-DscResource -ModuleName ComputerManagementDsc
     write-host "current location: $((get-location).path)"
     write-host "useraccount: $($useraccount.username)"
     Write-host "install script: $installScript"
@@ -81,7 +81,7 @@ configuration SFStandaloneInstall
 
         #$network_service_cred = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ("NT AUTHORITY\NETWORK SERVICE", (ConvertTo-SecureString -String 'WhoCares' -AsPlainText -Force))
 
-        xScheduledTask 'cmdkey'
+        ScheduledTask 'cmdkey'
         {
             TaskName         = 'cmdkey'
             TaskPath         = '\CustomTasks'
@@ -147,7 +147,7 @@ configuration SFStandaloneInstall
 
 if ($thumbprint -and $virtualMachineNamePrefix -and $commonName) {
     write-host "sfstandaloneinstall"
-    #Install-Module -ModuleName ComputerManagementDsc
+    Install-Module -name ComputerManagementDsc -force
     SFStandaloneInstall -useraccount $UserAccount `
         -installScript $installScript `
         -thumbprint $thumbprint `
