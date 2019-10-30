@@ -45,6 +45,7 @@ function main() {
     $configurationFileMod = "$([io.path]::GetFileNameWithoutExtension($configurationFile)).mod.json"
     log-info "-------------------------------"
     log-info "starting"
+    log-info "whoami $(whoami)"
     log-info "script path: $psscriptroot"
     log-info "log file: $logFile"
     log-info "current location: $currentLocation"
@@ -138,7 +139,7 @@ function main() {
         return
     }
 
-    #<#
+    <#
     # todo needed?
     log-info "start sleeping $($timeout / 4) seconds"
     start-sleep -seconds ($timeout / 4)

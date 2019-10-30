@@ -79,7 +79,7 @@ configuration SFStandaloneInstall
             PasswordNeverExpires = $true
         }
 
-        #$network_service_cred = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ("NT AUTHORITY\NETWORK SERVICE", (ConvertTo-SecureString -String 'WhoCares' -AsPlainText -Force))
+        $credential = new-object Management.Automation.PSCredential -ArgumentList ".\$($userAccount.Username)", $userAccount.Password
 
         ScheduledTask 'cmdkey'
         {
