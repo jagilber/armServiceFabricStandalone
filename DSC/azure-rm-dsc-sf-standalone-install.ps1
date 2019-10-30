@@ -138,7 +138,7 @@ function main() {
         return
     }
 
-    <#
+    #<#
     # todo needed?
     log-info "start sleeping $($timeout / 4) seconds"
     start-sleep -seconds ($timeout / 4)
