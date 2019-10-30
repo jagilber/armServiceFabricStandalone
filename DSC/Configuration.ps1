@@ -86,7 +86,7 @@ configuration SFStandaloneInstall
             TaskName         = 'cmdkey'
             TaskPath         = '\CustomTasks'
             ActionExecutable = 'cmdkey.exe'
-            ActionArguments  = "/generic:nt0000000 /user:$($using:credential.UserName) /pass:$($using:credential.Password)"
+            ActionArguments  = "/generic:nt0000000 /user:$($UserAccount.UserName) /pass:$($UserAccount.Password)"
             ScheduleType     = 'Once'
             StartTime        = "$((get-date).AddSeconds(10))"
             BuiltInAccount   = 'NETWORK SERVICE'
