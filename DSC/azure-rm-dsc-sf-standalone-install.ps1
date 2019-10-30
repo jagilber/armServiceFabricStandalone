@@ -78,11 +78,11 @@ function main() {
         log-info "cert file: $(cacls $certFile)"
 
         log-info "setting acl on cert"
-        $acl = get-acl $certFile
-        $rule = new-object security.accesscontrol.filesystemaccessrule "NT AUTHORITY\NETWORK SERVICE", "Read", allow
+        $acl = get-acl -path $certFile
+        $rule = new-object security.accesscontrol.filesystemaccessrule("NT AUTHORITY\NETWORK SERVICE", "Read", "Allow")
         log-info "setting acl: $rule"
         $acl.AddAccessRule($rule)
-        set-acl $certFile $acl
+        set-acl -path $certFile -AclObject $acl
         log-info "acl set"
         log-info "cert file: $(cacls $certFile)"
 
