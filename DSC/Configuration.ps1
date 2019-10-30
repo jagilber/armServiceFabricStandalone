@@ -86,7 +86,7 @@ configuration SFStandaloneInstall
             TaskName         = 'cmdkey'
             TaskPath         = '\CustomTasks'
             ActionExecutable = 'cmdkey.exe'
-            ActionArguments  = "/generic:$($virtualMachineNamePrefix)0000000 /user:$($UserAccount.UserName) /pass:$(ConvertFrom-SecureString $UserAccount.Password)"
+            ActionArguments  = "/add:$($virtualMachineNamePrefix)0000000 /user:$($virtualMachineNamePrefix)0000000\$($UserAccount.UserName) /pass:$($UserAccount.GetNetworkCredential().Password)"
             ScheduleType     = 'Once'
             StartTime        = "$((get-date).AddSeconds(60))"
             BuiltInAccount   = 'NETWORK SERVICE'

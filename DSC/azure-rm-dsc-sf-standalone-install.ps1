@@ -139,10 +139,12 @@ function main() {
         return
     }
 
-    <#
+    #
     # todo needed?
-    log-info "start sleeping $($timeout / 4) seconds"
-    start-sleep -seconds ($timeout / 4)
+    #log-info "start sleeping $($timeout / 4) seconds"
+    log-info "start sleeping 60 seconds"
+    #start-sleep -seconds ($timeout / 4)
+    start-sleep -seconds 60
     log-info "resuming"
     #>
 
