@@ -262,7 +262,7 @@ function main() {
 
         log-info "extracting standalonelogcollector"
         md C:\temp\standalonelogcollector
-        Expand-Archive .\Microsoft.Azure.ServiceFabric.WindowsServer.latest\Tools\Microsoft.Azure.ServiceFabric.WindowsServer.SupportPackage.zip c:\temp\standalonelogcollector
+        Expand-Archive .\Tools\Microsoft.Azure.ServiceFabric.WindowsServer.SupportPackage.zip c:\temp\standalonelogcollector
     }
 
     finish-script
