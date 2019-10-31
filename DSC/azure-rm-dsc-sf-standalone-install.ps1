@@ -259,6 +259,10 @@ function main() {
         #log-info $result 
         #$result = Get-ServiceFabricNode |Format-Table
         #log-info $result 
+
+        log-info "extracting standalonelogcollector"
+        md C:\temp\standalonelogcollector
+        Expand-Archive .\Microsoft.Azure.ServiceFabric.WindowsServer.latest\Tools\Microsoft.Azure.ServiceFabric.WindowsServer.SupportPackage.zip c:\temp\standalonelogcollector
     }
 
     finish-script
