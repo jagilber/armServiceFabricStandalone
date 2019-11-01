@@ -43,8 +43,9 @@ function main() {
     $logFile = "$psscriptroot\install.log"
     $currentLocation = (get-location).Path
     $configurationFileMod = "$([io.path]::GetFileNameWithoutExtension($configurationFile)).mod.json"
+    $startTime = get-date
     log-info "-------------------------------"
-    log-info "starting"
+    log-info "starting $startTime"
     log-info "whoami $(whoami)"
     log-info "script path: $psscriptroot"
     log-info "log file: $logFile"
@@ -142,11 +143,31 @@ function main() {
     #
     # todo needed?
     #log-info "start sleeping $($timeout / 4) seconds"
-    log-info "start sleeping 60 seconds"
+    #log-info "start sleeping 60 seconds"
     #start-sleep -seconds ($timeout / 4)
-    start-sleep -seconds 60
-    log-info "resuming"
+    #start-sleep -seconds 60
+    #log-info "resuming"
     #>
+    log-info "waiting for nodes"
+    $retry = $true
+
+    while($retry -and (((get-date) - $startTime).TotalSeconds -lt $timeout))
+    {
+        $retry = $false
+
+        foreach($node in $nodes)
+        {
+            log-info "checking $node"
+            
+            if(!(test-path "\\$node\c$"))
+            {
+                log-info "$node unavailable"
+                $retry = $true
+            }
+        }
+
+        start-sleep -Seconds 1
+    }
 
     if ($force -and (test-path $packagePath)) {
         log-info "deleting package"
