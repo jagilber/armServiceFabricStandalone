@@ -139,7 +139,7 @@ function main() {
 
         while(((get-date) - $startTime).TotalSeconds -lt $timeout)
         {
-            if((get-process).ProcessName -ieq "fabric") { 
+            if((get-process).ProcessName -ieq "fabricgateway") { 
                 log-info "$((get-process).ProcessName)"
                 break 
             }
@@ -153,10 +153,10 @@ function main() {
     #
     # todo needed?
     #log-info "start sleeping $($timeout / 4) seconds"
-    #log-info "start sleeping 60 seconds"
+    log-info "start sleeping 60 seconds"
     #start-sleep -seconds ($timeout / 4)
-    #start-sleep -seconds 60
-    #log-info "resuming"
+    start-sleep -seconds 60
+    log-info "resuming"
     #>
     log-info "waiting for nodes"
     $retry = $true
