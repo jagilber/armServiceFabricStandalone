@@ -136,6 +136,16 @@ function main() {
 
     if ($nodes[0] -inotmatch $env:COMPUTERNAME) {
         log-info "$env:COMPUTERNAME is not first node. exiting..."
+
+        while(((get-date) - $startTime).TotalSeconds -lt $timeout)
+        {
+            if((get-process).ProcessName -ieq "fabric") { 
+                log-info "$((get-process).ProcessName)"
+                break 
+            }
+            start-sleep -Seconds 1
+        }    
+
         finish-script
         return
     }
@@ -361,6 +371,8 @@ function finish-script() {
     Set-Location $currentLocation
     $VerbosePreference = $DebugPreference = "silentlycontinue"
     log-info "all errors: $($error | out-string)"
+    log-info "finished. total seconds: $(((get-date) - $startTime).TotalSeconds)"
+    
 }
 
 return main
