@@ -15,20 +15,6 @@
         "description": "Administrator password for the local admin account"
       }
     },
-    "azureClientId": {
-      "defaultValue": "optional",
-      "type": "string",
-      "metadata": {
-        "description": "optional: azure client id to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
-      }
-    },
-    "azureSecret": {
-      "defaultValue": "optional",
-      "type": "string",
-      "metadata": {
-        "description": "optional: azure client id secret to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
-      }
-    },
     "certificateCommonName": {
       "defaultValue": "",
       "type": "string",
@@ -446,9 +432,6 @@
                 "virtualMachineNamePrefix": "[parameters('virtualMachineNamePrefix')]",
                 "commonName": "[parameters('certificateCommonName')]",
                 "serviceFabricPackageUrl": "[parameters('serviceFabricPackageUrl')]",
-                "azureClientId": "[parameters('azureClientId')]",
-                "azureSecret": "[parameters('azureSecret')]",
-                "azureTenant": "[subscription().tenantId]",
                 "sourceVaultValue": "[parameters('sourceVaultValue')]",
                 "certificateUrlValue": "[parameters('certificateUrlValue')]",
                 "virtualMachineCount": "[parameters('virtualMachineCount')]"

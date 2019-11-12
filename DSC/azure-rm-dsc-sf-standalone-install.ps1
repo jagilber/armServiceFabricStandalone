@@ -13,12 +13,6 @@ param(
     [int]$virtualMachineCount,
     [Parameter(Mandatory = $false)]
     [string]$commonName = "",
-    [Parameter(Mandatory = $false)]
-    [string]$azureClientId = "optional",
-    [Parameter(Mandatory = $false)]
-    [string]$azureSecret = "optional",
-    [Parameter(Mandatory = $false)]
-    [string]$azureTenant = "optional",
     [string]$sourceVaultValue,
     [string]$certificateUrlValue,
     [string]$diagnosticShare,
@@ -28,8 +22,7 @@ param(
     [string]$serviceFabricPackageUrl = "https://go.microsoft.com/fwlink/?LinkId=730690",
     [string]$packageName = "Microsoft.Azure.ServiceFabric.WindowsServer.latest.zip",
     [string]$subnetPrefix = "10",
-    [int]$timeout = 1200 #,
-   # [pscredential]$credential
+    [int]$timeout = 1200
 )
 
 $erroractionpreference = "continue"
@@ -109,12 +102,6 @@ function main() {
     #winrm set winrm/config/client '@{TrustedHosts="*"}'
     winrm set winrm/config/client '@{TrustedHosts="<local>"}'
 
-
-    # if creds supplied, download cert and put into currentuser my store for cluster admin
-    if (($azureClientId -and $azureClientId -ine "optional") -and $azureSecret -and $azureTenant) {
-        log-info "downloading cert from store"
-        download-kvCert
-    }
 
     # read and modify config with thumb and nodes if first node
     $nodes = [collections.arraylist]@()
@@ -303,62 +290,6 @@ function main() {
     }
 
     return $false
-}
-
-function download-kvCert() {
-    #  requires WMF 5.0
-    #  verify NuGet package
-    #
-    $nuget = get-packageprovider nuget -Force
-    if (-not $nuget -or ($nuget.Version -lt 2.8.5.22)) {
-        log-info "installing nuget package..."
-        install-packageprovider -name NuGet -minimumversion 2.8.5.201 -force
-    }
-
-    #  install AzureRM module
-    #  min need AzureRM.profile, AzureRM.KeyVault
-    #
-    if (-not (get-module AzureRM -ListAvailable)) { 
-        log-info "installing AzureRm powershell module..." 
-        install-module AzureRM -force 
-    } 
-
-    #  log onto azure account
-    #
-    log-info "logging onto azure account with app id = $azureClientId ..."
-
-    $creds = new-object Management.Automation.PSCredential ($azureClientId, (convertto-securestring $azureSecret -asplaintext -force))
-    login-azurermaccount -credential $creds -serviceprincipal -tenantid $azureTenant -confirm:$false
-
-    #  get the secret from key vault
-    #
-    log-info "getting secret: $certificateUrlValue from keyvault: $sourceVaultValue"
-    $vaultPattern = "Microsoft.KeyVault/vaults/(.+?)(/|$)"
-    $certificatePattern = "/secrets/(.+?)/"
-
-    $vaultName = [regex]::Match($sourceVaultValue, $vaultPattern, [text.RegularExpressions.RegexOptions]::IgnoreCase).Groups[1].Value
-    $secretName = [regex]::Match($certificateUrlValue, $certificatePattern, [text.RegularExpressions.RegexOptions]::IgnoreCase).Groups[1].Value
-    log-info "getting secret: $secretName from keyvault: $vaultName"
-
-    $secret = get-azurekeyVaultSecret -vaultname $vaultName -name $secretName
-    $certObject = new-object Security.Cryptography.X509Certificates.X509Certificate2
-    $bytes = [convert]::FromBase64String($secret.SecretValueText)
-    $certObject.Import($bytes, $null, [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable -bor [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet)
-        
-    add-type -AssemblyName System.Web
-    $password = [Web.Security.Membership]::GeneratePassword(38, 5)
-    log-info "setting cert password: $password"
-    $protectedCertificateBytes = $certObject.Export([Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12, $password)
-    $pfxFilePath = "$PSScriptRoot\$secretName.pfx"
-
-    log-info "saving cert to: $pfxFilePath"
-    [io.file]::WriteAllBytes($pfxFilePath, $protectedCertificateBytes)
-
-    log-info "import certificate to current user Certificate store"
-    $certificateStore = new-object System.Security.Cryptography.X509Certificates.X509Store -argumentlist "My", "Currentuser"
-    $certificateStore.Open("readWrite")
-    $certificateStore.Add($certObject)
-    $certificateStore.Close()
 }
 
 function log-info($data) {

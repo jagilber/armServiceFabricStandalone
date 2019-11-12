@@ -8,12 +8,6 @@
     "adminUserName": {
       "value": ""
     },
-    "azureClientId": {
-      "value": "optional"
-    },
-    "azureSecret": {
-      "value": "optional"
-    },
     "certificateCommonName": {
       "value": ""
     },

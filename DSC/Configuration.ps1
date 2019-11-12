@@ -9,13 +9,7 @@ param(
     [string]$sourceVaultValue,
     [string]$certificateUrlValue,
     [string]$transcript,
-    [string]$serviceFabricPackageUrl,
-    [Parameter(Mandatory = $false)]
-    [string]$azureClientId = "",
-    [Parameter(Mandatory = $false)]
-    [string]$azureSecret = "",
-    [Parameter(Mandatory = $false)]
-    [string]$azureTenant = ""
+    [string]$serviceFabricPackageUrl
 )
 
 $configurationData = @{
@@ -43,13 +37,7 @@ configuration SFStandaloneInstall
         [string]$sourceVaultValue,
         [string]$certificateUrlValue,
         [string]$transcript = ".\transcript.log",
-        [string]$serviceFabricPackageUrl,
-        [Parameter(Mandatory = $false)]
-        [string]$azureClientId = "",
-        [Parameter(Mandatory = $false)]
-        [string]$azureSecret = "",
-        [Parameter(Mandatory = $false)]
-        [string]$azureTenant = ""
+        [string]$serviceFabricPackageUrl
     )
     
     $ErrorActionPreference = "silentlycontinue"
@@ -116,9 +104,6 @@ configuration SFStandaloneInstall
                         + "-virtualMachineCount $using:virtualMachineCount " `
                         + "-commonName $using:commonName " `
                         + "-serviceFabricPackageUrl $using:serviceFabricPackageUrl " `
-                        + "-azureClientId $using:azureClientId " `
-                        + "-azureSecret $using:azureSecret " `
-                        + "-azureTenant $using:azureTenant " `
                         + "-sourceVaultValue $using:sourceVaultValue " `
                         + "-certificateUrlValue $using:certificateUrlValue") -Verbose -Debug
                     
@@ -155,9 +140,6 @@ if ($thumbprint -and $virtualMachineNamePrefix -and $commonName) {
         -virtualMachineCount $virtualMachineCount `
         -commonname $commonName `
         -serviceFabricPackageUrl $serviceFabricPackageUrl `
-        -azureClientId $azureClientId `
-        -azureSecret $azureSecret `
-        -azureTenant $azureTenant `
         -sourceVaultValue $sourceVaultValue `
         -certificateUrlValue $certificateUrlValue `
         -ConfigurationData $configurationData
