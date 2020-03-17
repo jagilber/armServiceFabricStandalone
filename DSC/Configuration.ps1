@@ -107,7 +107,8 @@ configuration SFStandaloneInstall
                         + "-commonName $using:commonName " `
                         + "-serviceFabricPackageUrl $using:serviceFabricPackageUrl " `
                         + "-sourceVaultValue $using:sourceVaultValue " `
-                        + "-certificateUrlValue $using:certificateUrlValue") -Verbose -Debug
+                        + "-certificateUrlValue $using:certificateUrlValue" `
+                        + "-nodeTypeCount $using:nodeTypeCount") -Verbose -Debug
                     
                 write-host "invoke result: $result"
                 return @{ Result = $result }
@@ -144,8 +145,8 @@ if ($thumbprint -and $virtualMachineNamePrefix -and $commonName) {
         -serviceFabricPackageUrl $serviceFabricPackageUrl `
         -sourceVaultValue $sourceVaultValue `
         -certificateUrlValue $certificateUrlValue `
-        -ConfigurationData $configurationData `
-        -NodetypeCount $nodeTypeCount
+        -configurationData $configurationData `
+        -nodeTypeCount $nodeTypeCount
 
     # Start-DscConfiguration .\SFStandaloneInstall -wait -force -debug -verbose
 }
