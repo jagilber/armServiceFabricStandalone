@@ -20,6 +20,9 @@
     "dnsName": {
       "value": ""
     },
+    "nodeTypeCount": {
+      "value": 1
+    },
     "operatingSystem": {
       "value": "Server2016"
     },

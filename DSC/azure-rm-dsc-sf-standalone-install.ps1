@@ -334,4 +334,6 @@ function finish-script() {
     
 }
 
+log-info "$pscommandpath $($PSBoundParameters | out-string)"
+log-info "variables: `r`n$(get-variable | select Name,Value | ft -AutoSize * | out-string)"
 return main
