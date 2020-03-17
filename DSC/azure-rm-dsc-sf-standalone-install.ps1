@@ -125,9 +125,8 @@ function main() {
     if ($nodes[0] -inotmatch $env:COMPUTERNAME) {
         log-info "$env:COMPUTERNAME is not first node. exiting..."
 
-        while(((get-date) - $startTime).TotalSeconds -lt $timeout)
-        {
-            if((get-process).ProcessName -ieq "fabricgateway") { 
+        while (((get-date) - $startTime).TotalSeconds -lt $timeout) {
+            if ((get-process).ProcessName -ieq "fabricgateway") { 
                 log-info "$((get-process).ProcessName)"
                 break 
             }
@@ -149,16 +148,13 @@ function main() {
     log-info "waiting for nodes"
     $retry = $true
 
-    while($retry -and (((get-date) - $startTime).TotalSeconds -lt $timeout))
-    {
+    while ($retry -and (((get-date) - $startTime).TotalSeconds -lt $timeout)) {
         $retry = $false
 
-        foreach($node in $nodes)
-        {
+        foreach ($node in $nodes) {
             log-info "checking $node"
             
-            if(!(test-path "\\$node\c$"))
-            {
+            if (!(test-path "\\$node\c$")) {
                 log-info "$node unavailable"
                 $retry = $true
             }
@@ -204,7 +200,7 @@ function main() {
         md d:\diagnosticsStore
         log-info "sharing diagnostic store"
         icacls d:\diagnosticsStore /grant "NT AUTHORITY\NETWORK SERVICE:(OI)(CI)(F)"
-        net share diagnosticsStore=d:\diagnosticsStore /GRANT:everyone,FULL /GRANT:"NT AUTHORITY\NETWORK SERVICE",FULL
+        net share diagnosticsStore=d:\diagnosticsStore /GRANT:everyone, FULL /GRANT:"NT AUTHORITY\NETWORK SERVICE", FULL
         log-info (net share)
         #$share = "\\\\$((@((Resolve-DnsName $env:COMPUTERNAME).ipaddress) -imatch "$subnetPrefix\..+\..+\.")[0])\\diagnosticsStore"
         $share = "\\\\$($env:COMPUTERNAME)\\diagnosticsStore"
@@ -217,23 +213,45 @@ function main() {
     # add nodes to json
     $json = Get-Content -Raw $configurationFileMod | convertfrom-json
     $nodeList = [collections.arraylist]@()
+    $nodeTypeList = [collections.arraylist]@()
     $count = 0
     $isSeedNode = $true
     $nodeCount = 0
     $nodesPerType = $nodes.count / $nodeTypeCount
 
+    if ($nodeTypeCount -gt 1) {
+        log-info "adding nodetypes"
+        for ($i = 0; $i -lt $nodeTypeCount; $i++) {
+            [void]$nodeTypeList.Add(@{
+                    name                          = "NodeType$i"
+                    clientConnectionEndpointPort  = "19000"
+                    clusterConnectionEndpointPort = "19001"
+                    leaseDriverEndpointPort       = "19002"
+                    serviceConnectionEndpointPort = "19003"
+                    httpGatewayEndpointPort       = "19080"
+                    reverseProxyEndpointPort      = "19081"
+                    applicationPorts              = @{
+                        startPort = "20001"
+                        endPort   = "20031"
+                    }
+                    isPrimary                     = true
+                })
+        }
+        $json.nodeTypes = $nodeTypeList.toarray()
+    }
+
     log-info "adding nodes"
 
     foreach ($node in $nodes) {
         $nodeTypeRef = 0
-        if($nodeTypeCount -gt 1) {
-            if(++$nodeCount -gt $nodesPerType) {
+        if ($nodeTypeCount -gt 1) {
+            if (++$nodeCount -gt $nodesPerType) {
                 $nodeCount = 0
-                [math]::Min($nodesPerType,++$nodeTypeRef)
+                [math]::Min($nodesPerType, ++$nodeTypeRef)
             }
         }
 
-        $nodeList.Add(@{
+        [void]$nodeList.Add(@{
                 nodeName      = $node
                 iPAddress     = (@((Resolve-DnsName $node).ipaddress) -imatch "$subnetPrefix\..+\..+\.")[0]
                 nodeTypeRef   = "NodeType$nodeTypeRef"
