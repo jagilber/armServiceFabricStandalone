@@ -9,7 +9,8 @@ param(
     [string]$sourceVaultValue,
     [string]$certificateUrlValue,
     [string]$transcript,
-    [string]$serviceFabricPackageUrl
+    [string]$serviceFabricPackageUrl,
+    [int]$nodeTypeCount = 1
 )
 
 $configurationData = @{
@@ -37,7 +38,8 @@ configuration SFStandaloneInstall
         [string]$sourceVaultValue,
         [string]$certificateUrlValue,
         [string]$transcript = ".\transcript.log",
-        [string]$serviceFabricPackageUrl
+        [string]$serviceFabricPackageUrl,
+        [int]$nodeTypeCount
     )
     
     $ErrorActionPreference = "silentlycontinue"
@@ -142,7 +144,8 @@ if ($thumbprint -and $virtualMachineNamePrefix -and $commonName) {
         -serviceFabricPackageUrl $serviceFabricPackageUrl `
         -sourceVaultValue $sourceVaultValue `
         -certificateUrlValue $certificateUrlValue `
-        -ConfigurationData $configurationData
+        -ConfigurationData $configurationData `
+        -NodetypeCount $nodeTypeCount
 
     # Start-DscConfiguration .\SFStandaloneInstall -wait -force -debug -verbose
 }

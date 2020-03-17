@@ -22,6 +22,7 @@ param(
     [string]$serviceFabricPackageUrl = "https://go.microsoft.com/fwlink/?LinkId=730690",
     [string]$packageName = "Microsoft.Azure.ServiceFabric.WindowsServer.latest.zip",
     [string]$subnetPrefix = "10",
+    [int]$nodeTypeCount = 1,
     [int]$timeout = 1200
 )
 
@@ -218,15 +219,24 @@ function main() {
     $nodeList = [collections.arraylist]@()
     $count = 0
     $isSeedNode = $true
+    $nodeCount = 0
+    $nodesPerType = $nodes.count / $nodeTypeCount
 
     log-info "adding nodes"
 
     foreach ($node in $nodes) {
-        #[int]$toggle = !$toggle
+        $nodeTypeRef = 0
+        if($nodeTypeCount -gt 1) {
+            if(++$nodeCount -gt $nodesPerType) {
+                $nodeCount = 0
+                [math]::Min($nodesPerType,++$nodeTypeRef)
+            }
+        }
+
         $nodeList.Add(@{
                 nodeName      = $node
                 iPAddress     = (@((Resolve-DnsName $node).ipaddress) -imatch "$subnetPrefix\..+\..+\.")[0]
-                nodeTypeRef   = "NodeType0"
+                nodeTypeRef   = "NodeType$nodeTypeRef"
                 faultDomain   = "fd:/dc1/r$count"
                 upgradeDomain = "UD$count"
                 isSeedNode    = $isSeedNode.tostring()

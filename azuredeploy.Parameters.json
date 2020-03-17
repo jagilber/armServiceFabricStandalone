@@ -20,9 +20,6 @@
     "dnsName": {
       "value": ""
     },
-    "keyVaultSecretName": {
-      "value": ""
-    },
     "operatingSystem": {
       "value": "Server2016"
     },
