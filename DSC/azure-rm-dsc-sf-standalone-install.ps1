@@ -28,6 +28,7 @@ param(
 
 $erroractionpreference = "continue"
 $logFile = $null
+$boundParams = "$pscommandpath $($PSBoundParameters | out-string)"
 
 function main() {
     $VerbosePreference = $DebugPreference = "continue"
@@ -44,7 +45,10 @@ function main() {
     log-info "script path: $psscriptroot"
     log-info "log file: $logFile"
     log-info "current location: $currentLocation"
+    log-info "nodeTypeCount: $nodeTypeCount"
     log-info "configuration file: $configurationFileMod"
+    log-info "bound params: $boundParams"
+    log-info "variables: `r`n$(get-variable | select Name,Value | ft -AutoSize * | out-string)"
 
     # verify and acl cert
     $cert = get-item Cert:\LocalMachine\My\$thumbprint
@@ -334,6 +338,4 @@ function finish-script() {
     
 }
 
-log-info "$pscommandpath $($PSBoundParameters | out-string)"
-log-info "variables: `r`n$(get-variable | select Name,Value | ft -AutoSize * | out-string)"
 return main
