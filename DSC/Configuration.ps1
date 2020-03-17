@@ -104,11 +104,11 @@ configuration SFStandaloneInstall
                         + "-thumbprint $using:thumbprint " `
                         + "-virtualMachineNamePrefix $using:virtualMachineNamePrefix " `
                         + "-virtualMachineCount $using:virtualMachineCount " `
+                        + "-nodeTypeCount $using:nodeTypeCount" `
                         + "-commonName $using:commonName " `
                         + "-serviceFabricPackageUrl $using:serviceFabricPackageUrl " `
                         + "-sourceVaultValue $using:sourceVaultValue " `
-                        + "-certificateUrlValue $using:certificateUrlValue" `
-                        + "-nodeTypeCount $using:nodeTypeCount") -Verbose -Debug
+                        + "-certificateUrlValue $using:certificateUrlValue") -Verbose -Debug
                     
                 write-host "invoke result: $result"
                 return @{ Result = $result }
@@ -141,12 +141,12 @@ if ($thumbprint -and $virtualMachineNamePrefix -and $commonName) {
         -thumbprint $thumbprint `
         -virtualMachineNamePrefix $virtualMachineNamePrefix `
         -virtualMachineCount $virtualMachineCount `
+        -nodeTypeCount $nodeTypeCount `
         -commonname $commonName `
         -serviceFabricPackageUrl $serviceFabricPackageUrl `
         -sourceVaultValue $sourceVaultValue `
         -certificateUrlValue $certificateUrlValue `
-        -configurationData $configurationData `
-        -nodeTypeCount $nodeTypeCount
+        -configurationData $configurationData
 
     # Start-DscConfiguration .\SFStandaloneInstall -wait -force -debug -verbose
 }
