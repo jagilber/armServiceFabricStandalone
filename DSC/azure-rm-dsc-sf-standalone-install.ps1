@@ -203,9 +203,13 @@ function main() {
         log-info "creating diagnostic store"
         md d:\diagnosticsStore
         log-info "sharing diagnostic store"
+        log-info "icacls d:\diagnosticsStore /grant `"NT AUTHORITY\NETWORK SERVICE:(OI)(CI)(F)`""
         icacls d:\diagnosticsStore /grant "NT AUTHORITY\NETWORK SERVICE:(OI)(CI)(F)"
-        net share diagnosticsStore=d:\diagnosticsStore /GRANT:everyone, FULL /GRANT:"NT AUTHORITY\NETWORK SERVICE", FULL
-        log-info (net share)
+
+        log-info "net share diagnosticsStore=d:\diagnosticsStore /GRANT:everyone,FULL /GRANT:`"NT AUTHORITY\NETWORK SERVICE`",FULL"
+        net share diagnosticsStore=d:\diagnosticsStore /GRANT:everyone,FULL /GRANT:"NT AUTHORITY\NETWORK SERVICE",FULL
+
+        log-info "net share results: $(net share)"
         #$share = "\\\\$((@((Resolve-DnsName $env:COMPUTERNAME).ipaddress) -imatch "$subnetPrefix\..+\..+\.")[0])\\diagnosticsStore"
         $share = "\\\\$($env:COMPUTERNAME)\\diagnosticsStore"
         log-info "new share $share"
@@ -238,7 +242,7 @@ function main() {
                         startPort = "20001"
                         endPort   = "20031"
                     }
-                    isPrimary                     = true
+                    isPrimary                     = ($i -eq 0).ToString()
                 })
         }
         $json.properties.nodeTypes = $nodeTypeList.toarray()
