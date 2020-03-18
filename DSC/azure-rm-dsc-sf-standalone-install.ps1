@@ -226,6 +226,7 @@ function main() {
     $isSeedNode = $true
     $nodeCount = 0
     $nodesPerType = $nodes.count / $nodeTypeCount
+    $nodeTypeRef = 0
 
     if ($nodeTypeCount -gt 1) {
         log-info "adding nodetypes"
@@ -251,22 +252,25 @@ function main() {
     log-info "adding nodes"
 
     foreach ($node in $nodes) {
-        $nodeTypeRef = 0
         if ($nodeTypeCount -gt 1) {
             if (++$nodeCount -gt $nodesPerType) {
                 $nodeCount = 0
-                [math]::Min($nodesPerType, ++$nodeTypeRef)
+                $nodeTypeRef = [math]::Min($nodeTypeCount, ++$nodeTypeRef)
             }
         }
 
-        [void]$nodeList.Add(@{
+        $nodeObj = @{
                 nodeName      = $node
                 iPAddress     = (@((Resolve-DnsName $node).ipaddress) -imatch "$subnetPrefix\..+\..+\.")[0]
                 nodeTypeRef   = "NodeType$nodeTypeRef"
                 faultDomain   = "fd:/dc1/r$count"
                 upgradeDomain = "UD$count"
-                isSeedNode    = $isSeedNode.tostring()
-            })
+            }
+        if($isSeedNode) {
+            $nodeObj.isSeedNode    = "True"
+        }
+
+        [void]$nodeList.Add($nodeObj)
         
         if (++$count -gt 4) {
             $isSeedNode = $false
