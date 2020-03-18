@@ -241,7 +241,7 @@ function main() {
                     isPrimary                     = true
                 })
         }
-        $json.nodeTypes = $nodeTypeList.toarray()
+        $json.properties.nodeTypes = $nodeTypeList.toarray()
     }
 
     log-info "adding nodes"
