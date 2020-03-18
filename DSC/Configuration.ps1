@@ -104,7 +104,7 @@ configuration SFStandaloneInstall
                         + "-thumbprint $using:thumbprint " `
                         + "-virtualMachineNamePrefix $using:virtualMachineNamePrefix " `
                         + "-virtualMachineCount $using:virtualMachineCount " `
-                        + "-nodeTypeCount $using:nodeTypeCount" `
+                        + "-nodeTypeCount $using:nodeTypeCount " `
                         + "-commonName $using:commonName " `
                         + "-serviceFabricPackageUrl $using:serviceFabricPackageUrl " `
                         + "-sourceVaultValue $using:sourceVaultValue " `
