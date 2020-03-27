@@ -279,6 +279,9 @@ function main() {
         
     }
 
+    log-info "adding dns service"
+    add-member -InputObject $json.properties -memberType NoteProperty -Name 'addonFeatures' -Value @('DnsService')
+
     $json.nodes = $nodeList.toarray()
     log-info "saving json with nodes"
     Out-File -InputObject ($json | convertto-json -Depth 99) -FilePath $configurationFileMod -Force
