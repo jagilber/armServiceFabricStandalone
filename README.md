@@ -8,6 +8,7 @@ NOTE: not for production use
 ### self signed or trusted certificate stored in azure keyvault.
 
 * **'certificateThumbprint'** certificate thumbprint
+* **'commonname'** certificate common name / subject
 * **'sourceVaultValue'** "Resource Id of the key vault. Example:  
 /subscriptions/\<Sub ID\>/resourceGroups/\<Resource group name\>/providers/Microsoft.KeyVault/vaults/\<vault name\>
 * **'certificateUrlValue'** - location URL of certificate in key vault. Example:  
