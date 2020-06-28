@@ -201,13 +201,13 @@ function main() {
     }
     else {
         log-info "creating diagnostic store"
-        md d:\diagnosticsStore
+        md c:\diagnosticsStore
         log-info "sharing diagnostic store"
-        log-info "icacls d:\diagnosticsStore /grant `"NT AUTHORITY\NETWORK SERVICE:(OI)(CI)(F)`""
-        icacls d:\diagnosticsStore /grant "NT AUTHORITY\NETWORK SERVICE:(OI)(CI)(F)"
+        log-info "icacls c:\diagnosticsStore /grant `"NT AUTHORITY\NETWORK SERVICE:(OI)(CI)(F)`""
+        icacls c:\diagnosticsStore /grant "NT AUTHORITY\NETWORK SERVICE:(OI)(CI)(F)"
 
-        log-info "net share diagnosticsStore=d:\diagnosticsStore /GRANT:everyone,FULL /GRANT:`"NT AUTHORITY\NETWORK SERVICE`",FULL"
-        net share diagnosticsStore=d:\diagnosticsStore /GRANT:everyone,FULL /GRANT:"NT AUTHORITY\NETWORK SERVICE",FULL
+        log-info "net share diagnosticsStore=c:\diagnosticsStore /GRANT:everyone,FULL /GRANT:`"NT AUTHORITY\NETWORK SERVICE`",FULL"
+        net share diagnosticsStore=c:\diagnosticsStore /GRANT:everyone,FULL /GRANT:"NT AUTHORITY\NETWORK SERVICE",FULL
 
         log-info "net share results: $(net share)"
         #$share = "\\\\$((@((Resolve-DnsName $env:COMPUTERNAME).ipaddress) -imatch "$subnetPrefix\..+\..+\.")[0])\\diagnosticsStore"
