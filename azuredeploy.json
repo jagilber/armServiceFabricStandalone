@@ -15,20 +15,6 @@
         "description": "Administrator password for the local admin account"
       }
     },
-    "azureClientId": {
-      "defaultValue": "optional",
-      "type": "string",
-      "metadata": {
-        "description": "optional: azure client id to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
-      }
-    },
-    "azureSecret": {
-      "defaultValue": "optional",
-      "type": "string",
-      "metadata": {
-        "description": "optional: azure client id secret to connect to keyvault and install certificate into currentuser/My store for administration of cluster."
-      }
-    },
     "certificateCommonName": {
       "defaultValue": "",
       "type": "string",
@@ -64,6 +50,13 @@
     "fabricHttpGatewayPort": {
       "type": "int",
       "defaultValue": 19080
+    },
+    "nodeTypeCount": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "Number of node Types to be created"
+      }
     },
     "operatingSystem": {
       "type": "string",
@@ -103,7 +96,7 @@
       "type": "int",
       "defaultValue": 5,
       "metadata": {
-        "description": "Number of  virtual machines to be created"
+        "description": "Number of virtual machines to be created"
       }
     },
     "virtualMachineSize": {
@@ -446,12 +439,10 @@
                 "virtualMachineNamePrefix": "[parameters('virtualMachineNamePrefix')]",
                 "commonName": "[parameters('certificateCommonName')]",
                 "serviceFabricPackageUrl": "[parameters('serviceFabricPackageUrl')]",
-                "azureClientId": "[parameters('azureClientId')]",
-                "azureSecret": "[parameters('azureSecret')]",
-                "azureTenant": "[subscription().tenantId]",
                 "sourceVaultValue": "[parameters('sourceVaultValue')]",
                 "certificateUrlValue": "[parameters('certificateUrlValue')]",
-                "virtualMachineCount": "[parameters('virtualMachineCount')]"
+                "virtualMachineCount": "[parameters('virtualMachineCount')]",
+                "nodeTypeCount": "[parameters('nodeTypeCount')]"
               },
               "privacy": {
                 "dataCollection": "enable"

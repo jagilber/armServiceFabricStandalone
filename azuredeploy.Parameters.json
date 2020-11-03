@@ -8,12 +8,6 @@
     "adminUserName": {
       "value": ""
     },
-    "azureClientId": {
-      "value": "optional"
-    },
-    "azureSecret": {
-      "value": "optional"
-    },
     "certificateCommonName": {
       "value": ""
     },
@@ -26,8 +20,8 @@
     "dnsName": {
       "value": ""
     },
-    "keyVaultSecretName": {
-      "value": ""
+    "nodeTypeCount": {
+      "value": 1
     },
     "operatingSystem": {
       "value": "Server2016"

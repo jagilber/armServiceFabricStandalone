@@ -10,12 +10,7 @@ param(
     [string]$certificateUrlValue,
     [string]$transcript,
     [string]$serviceFabricPackageUrl,
-    [Parameter(Mandatory = $false)]
-    [string]$azureClientId = "",
-    [Parameter(Mandatory = $false)]
-    [string]$azureSecret = "",
-    [Parameter(Mandatory = $false)]
-    [string]$azureTenant = ""
+    [int]$nodeTypeCount = 1
 )
 
 [net.servicePointManager]::Expect100Continue = $true;
@@ -47,12 +42,7 @@ configuration SFStandaloneInstall
         [string]$certificateUrlValue,
         [string]$transcript = ".\transcript.log",
         [string]$serviceFabricPackageUrl,
-        [Parameter(Mandatory = $false)]
-        [string]$azureClientId = "",
-        [Parameter(Mandatory = $false)]
-        [string]$azureSecret = "",
-        [Parameter(Mandatory = $false)]
-        [string]$azureTenant = ""
+        [int]$nodeTypeCount
     )
     
     $ErrorActionPreference = "silentlycontinue"
@@ -117,11 +107,9 @@ configuration SFStandaloneInstall
                         + "-thumbprint $using:thumbprint " `
                         + "-virtualMachineNamePrefix $using:virtualMachineNamePrefix " `
                         + "-virtualMachineCount $using:virtualMachineCount " `
+                        + "-nodeTypeCount $using:nodeTypeCount " `
                         + "-commonName $using:commonName " `
                         + "-serviceFabricPackageUrl $using:serviceFabricPackageUrl " `
-                        + "-azureClientId $using:azureClientId " `
-                        + "-azureSecret $using:azureSecret " `
-                        + "-azureTenant $using:azureTenant " `
                         + "-sourceVaultValue $using:sourceVaultValue " `
                         + "-certificateUrlValue $using:certificateUrlValue") -Verbose -Debug
                     
@@ -156,14 +144,12 @@ if ($thumbprint -and $virtualMachineNamePrefix -and $commonName) {
         -thumbprint $thumbprint `
         -virtualMachineNamePrefix $virtualMachineNamePrefix `
         -virtualMachineCount $virtualMachineCount `
+        -nodeTypeCount $nodeTypeCount `
         -commonname $commonName `
         -serviceFabricPackageUrl $serviceFabricPackageUrl `
-        -azureClientId $azureClientId `
-        -azureSecret $azureSecret `
-        -azureTenant $azureTenant `
         -sourceVaultValue $sourceVaultValue `
         -certificateUrlValue $certificateUrlValue `
-        -ConfigurationData $configurationData
+        -configurationData $configurationData
 
     # Start-DscConfiguration .\SFStandaloneInstall -wait -force -debug -verbose
 }

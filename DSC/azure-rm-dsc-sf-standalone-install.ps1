@@ -13,12 +13,6 @@ param(
     [int]$virtualMachineCount,
     [Parameter(Mandatory = $false)]
     [string]$commonName = "",
-    [Parameter(Mandatory = $false)]
-    [string]$azureClientId = "optional",
-    [Parameter(Mandatory = $false)]
-    [string]$azureSecret = "optional",
-    [Parameter(Mandatory = $false)]
-    [string]$azureTenant = "optional",
     [string]$sourceVaultValue,
     [string]$certificateUrlValue,
     [string]$diagnosticShare,
@@ -28,8 +22,8 @@ param(
     [string]$serviceFabricPackageUrl = "https://go.microsoft.com/fwlink/?LinkId=730690",
     [string]$packageName = "Microsoft.Azure.ServiceFabric.WindowsServer.latest.zip",
     [string]$subnetPrefix = "10",
-    [int]$timeout = 1200 #,
-   # [pscredential]$credential
+    [int]$nodeTypeCount = 1,
+    [int]$timeout = 1200
 )
 
 [net.servicePointManager]::Expect100Continue = $true;
@@ -37,6 +31,7 @@ param(
 
 $erroractionpreference = "continue"
 $logFile = $null
+$boundParams = "$pscommandpath $($PSBoundParameters | out-string)"
 
 function main() {
     $VerbosePreference = $DebugPreference = "continue"
@@ -53,7 +48,10 @@ function main() {
     log-info "script path: $psscriptroot"
     log-info "log file: $logFile"
     log-info "current location: $currentLocation"
+    log-info "nodeTypeCount: $nodeTypeCount"
     log-info "configuration file: $configurationFileMod"
+    log-info "bound params: $boundParams"
+    log-info "variables: `r`n$(get-variable | select Name,Value | ft -AutoSize * | out-string)"
 
     # verify and acl cert
     $cert = get-item Cert:\LocalMachine\My\$thumbprint
@@ -113,12 +111,6 @@ function main() {
     winrm set winrm/config/client '@{TrustedHosts="<local>"}'
 
 
-    # if creds supplied, download cert and put into currentuser my store for cluster admin
-    if (($azureClientId -and $azureClientId -ine "optional") -and $azureSecret -and $azureTenant) {
-        log-info "downloading cert from store"
-        download-kvCert
-    }
-
     # read and modify config with thumb and nodes if first node
     $nodes = [collections.arraylist]@()
 
@@ -140,9 +132,8 @@ function main() {
     if ($nodes[0] -inotmatch $env:COMPUTERNAME) {
         log-info "$env:COMPUTERNAME is not first node. exiting..."
 
-        while(((get-date) - $startTime).TotalSeconds -lt $timeout)
-        {
-            if((get-process).ProcessName -ieq "fabricgateway") { 
+        while (((get-date) - $startTime).TotalSeconds -lt $timeout) {
+            if ((get-process).ProcessName -ieq "fabricgateway") { 
                 log-info "$((get-process).ProcessName)"
                 break 
             }
@@ -164,16 +155,13 @@ function main() {
     log-info "waiting for nodes"
     $retry = $true
 
-    while($retry -and (((get-date) - $startTime).TotalSeconds -lt $timeout))
-    {
+    while ($retry -and (((get-date) - $startTime).TotalSeconds -lt $timeout)) {
         $retry = $false
 
-        foreach($node in $nodes)
-        {
+        foreach ($node in $nodes) {
             log-info "checking $node"
             
-            if(!(test-path "\\$node\c$"))
-            {
+            if (!(test-path "\\$node\c$")) {
                 log-info "$node unavailable"
                 $retry = $true
             }
@@ -216,11 +204,15 @@ function main() {
     }
     else {
         log-info "creating diagnostic store"
-        md d:\diagnosticsStore
+        md c:\diagnosticsStore
         log-info "sharing diagnostic store"
-        icacls d:\diagnosticsStore /grant "NT AUTHORITY\NETWORK SERVICE:(OI)(CI)(F)"
-        net share diagnosticsStore=d:\diagnosticsStore /GRANT:everyone,FULL /GRANT:"NT AUTHORITY\NETWORK SERVICE",FULL
-        log-info (net share)
+        log-info "icacls c:\diagnosticsStore /grant `"NT AUTHORITY\NETWORK SERVICE:(OI)(CI)(F)`""
+        icacls c:\diagnosticsStore /grant "NT AUTHORITY\NETWORK SERVICE:(OI)(CI)(F)"
+
+        log-info "net share diagnosticsStore=c:\diagnosticsStore /GRANT:everyone,FULL /GRANT:`"NT AUTHORITY\NETWORK SERVICE`",FULL"
+        net share diagnosticsStore=c:\diagnosticsStore /GRANT:everyone,FULL /GRANT:"NT AUTHORITY\NETWORK SERVICE",FULL
+
+        log-info "net share results: $(net share)"
         #$share = "\\\\$((@((Resolve-DnsName $env:COMPUTERNAME).ipaddress) -imatch "$subnetPrefix\..+\..+\.")[0])\\diagnosticsStore"
         $share = "\\\\$($env:COMPUTERNAME)\\diagnosticsStore"
         log-info "new share $share"
@@ -232,21 +224,56 @@ function main() {
     # add nodes to json
     $json = Get-Content -Raw $configurationFileMod | convertfrom-json
     $nodeList = [collections.arraylist]@()
+    $nodeTypeList = [collections.arraylist]@()
     $count = 0
     $isSeedNode = $true
+    $nodeCount = 0
+    $nodesPerType = $nodes.count / $nodeTypeCount
+    $nodeTypeRef = 0
+
+    if ($nodeTypeCount -gt 1) {
+        log-info "adding nodetypes"
+        for ($i = 0; $i -lt $nodeTypeCount; $i++) {
+            [void]$nodeTypeList.Add(@{
+                    name                          = "NodeType$i"
+                    clientConnectionEndpointPort  = "19000"
+                    clusterConnectionEndpointPort = "19001"
+                    leaseDriverEndpointPort       = "19002"
+                    serviceConnectionEndpointPort = "19003"
+                    httpGatewayEndpointPort       = "19080"
+                    reverseProxyEndpointPort      = "19081"
+                    applicationPorts              = @{
+                        startPort = "20001"
+                        endPort   = "20031"
+                    }
+                    isPrimary                     = ($i -eq 0).ToString()
+                })
+        }
+        $json.properties.nodeTypes = $nodeTypeList.toarray()
+    }
 
     log-info "adding nodes"
 
     foreach ($node in $nodes) {
-        #[int]$toggle = !$toggle
-        $nodeList.Add(@{
+        if ($nodeTypeCount -gt 1) {
+            if (++$nodeCount -gt $nodesPerType) {
+                $nodeCount = 0
+                $nodeTypeRef = [math]::Min($nodeTypeCount, ++$nodeTypeRef)
+            }
+        }
+
+        $nodeObj = @{
                 nodeName      = $node
                 iPAddress     = (@((Resolve-DnsName $node).ipaddress) -imatch "$subnetPrefix\..+\..+\.")[0]
-                nodeTypeRef   = "NodeType0"
+                nodeTypeRef   = "NodeType$nodeTypeRef"
                 faultDomain   = "fd:/dc1/r$count"
                 upgradeDomain = "UD$count"
-                isSeedNode    = $isSeedNode.tostring()
-            })
+            }
+        if($isSeedNode) {
+            $nodeObj.isSeedNode    = "True"
+        }
+
+        [void]$nodeList.Add($nodeObj)
         
         if (++$count -gt 4) {
             $isSeedNode = $false
@@ -254,6 +281,9 @@ function main() {
         }
         
     }
+
+    log-info "adding dns service"
+    add-member -InputObject $json.properties -memberType NoteProperty -Name 'addonFeatures' -Value @('DnsService')
 
     $json.nodes = $nodeList.toarray()
     log-info "saving json with nodes"
@@ -306,62 +336,6 @@ function main() {
     }
 
     return $false
-}
-
-function download-kvCert() {
-    #  requires WMF 5.0
-    #  verify NuGet package
-    #
-    $nuget = get-packageprovider nuget -Force
-    if (-not $nuget -or ($nuget.Version -lt 2.8.5.22)) {
-        log-info "installing nuget package..."
-        install-packageprovider -name NuGet -minimumversion 2.8.5.201 -force
-    }
-
-    #  install AzureRM module
-    #  min need AzureRM.profile, AzureRM.KeyVault
-    #
-    if (-not (get-module AzureRM -ListAvailable)) { 
-        log-info "installing AzureRm powershell module..." 
-        install-module AzureRM -force 
-    } 
-
-    #  log onto azure account
-    #
-    log-info "logging onto azure account with app id = $azureClientId ..."
-
-    $creds = new-object Management.Automation.PSCredential ($azureClientId, (convertto-securestring $azureSecret -asplaintext -force))
-    login-azurermaccount -credential $creds -serviceprincipal -tenantid $azureTenant -confirm:$false
-
-    #  get the secret from key vault
-    #
-    log-info "getting secret: $certificateUrlValue from keyvault: $sourceVaultValue"
-    $vaultPattern = "Microsoft.KeyVault/vaults/(.+?)(/|$)"
-    $certificatePattern = "/secrets/(.+?)/"
-
-    $vaultName = [regex]::Match($sourceVaultValue, $vaultPattern, [text.RegularExpressions.RegexOptions]::IgnoreCase).Groups[1].Value
-    $secretName = [regex]::Match($certificateUrlValue, $certificatePattern, [text.RegularExpressions.RegexOptions]::IgnoreCase).Groups[1].Value
-    log-info "getting secret: $secretName from keyvault: $vaultName"
-
-    $secret = get-azurekeyVaultSecret -vaultname $vaultName -name $secretName
-    $certObject = new-object Security.Cryptography.X509Certificates.X509Certificate2
-    $bytes = [convert]::FromBase64String($secret.SecretValueText)
-    $certObject.Import($bytes, $null, [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable -bor [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet)
-        
-    add-type -AssemblyName System.Web
-    $password = [Web.Security.Membership]::GeneratePassword(38, 5)
-    log-info "setting cert password: $password"
-    $protectedCertificateBytes = $certObject.Export([Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12, $password)
-    $pfxFilePath = "$PSScriptRoot\$secretName.pfx"
-
-    log-info "saving cert to: $pfxFilePath"
-    [io.file]::WriteAllBytes($pfxFilePath, $protectedCertificateBytes)
-
-    log-info "import certificate to current user Certificate store"
-    $certificateStore = new-object System.Security.Cryptography.X509Certificates.X509Store -argumentlist "My", "Currentuser"
-    $certificateStore.Open("readWrite")
-    $certificateStore.Add($certObject)
-    $certificateStore.Close()
 }
 
 function log-info($data) {
