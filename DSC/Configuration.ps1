@@ -18,6 +18,9 @@ param(
     [string]$azureTenant = ""
 )
 
+[net.servicePointManager]::Expect100Continue = $true;
+[net.servicePointManager]::SecurityProtocol = [net.securityProtocolType]::Tls12;
+
 $configurationData = @{
     AllNodes = @(
         @{

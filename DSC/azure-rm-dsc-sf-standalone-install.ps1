@@ -32,6 +32,9 @@ param(
    # [pscredential]$credential
 )
 
+[net.servicePointManager]::Expect100Continue = $true;
+[net.servicePointManager]::SecurityProtocol = [net.securityProtocolType]::Tls12;
+
 $erroractionpreference = "continue"
 $logFile = $null
 
