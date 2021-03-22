@@ -23,6 +23,7 @@ param(
     [string]$packageName = "Microsoft.Azure.ServiceFabric.WindowsServer.latest.zip",
     [string]$subnetPrefix = "10",
     [int]$nodeTypeCount = 1,
+    [string]$storageAccountName,
     [int]$timeout = 1200
 )
 
@@ -49,6 +50,7 @@ function main() {
     log-info "log file: $logFile"
     log-info "current location: $currentLocation"
     log-info "nodeTypeCount: $nodeTypeCount"
+    log-info "storageAccountName: $storageAccountName"
     log-info "configuration file: $configurationFileMod"
     log-info "bound params: $boundParams"
     log-info "variables: `r`n$(get-variable | select Name,Value | ft -AutoSize * | out-string)"
