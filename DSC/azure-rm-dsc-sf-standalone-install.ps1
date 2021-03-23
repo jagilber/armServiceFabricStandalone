@@ -273,7 +273,7 @@ function main() {
     if ($storageAccountName) {
         $json.properties.diagnosticsStore.storeType = 'AzureStorage'
         $json.properties.diagnosticsStore.connectionString = "xstore:DefaultEndpointsProtocol=https;AccountName=$storageAccountName;AccountKey=$storageAccountKey"
-        $json.properties.addonFeatures = @('DnsService', 'EventStoreService')
+        #$json.properties.addonFeatures = @('DnsService', 'EventStoreService')
     }
     elseif ($diagnosticShare) {
         $json.properties.diagnosticsStore.connectionString = $diagnosticShare
@@ -310,11 +310,14 @@ function main() {
     else {
         log-info "testing cluster"
         $error.Clear()
-        $result = .\TestConfiguration.ps1 -ClusterConfigFilePath $configurationFileMod
+        $result = .\TestConfiguration.ps1 -ClusterConfigFilePath $configurationFileMod -verbose
         log-info $result
 
         if ($result -imatch "false|fail|exception") {
-            log-info "error: failed test: $($error | out-string)"
+            log-info "error:failed test:result:$result error:$($error | out-string)"
+            if ((test-path '.\deploymentTraces')) {
+                log-info "deployment traces: `r`n $(Get-Content '.\deploymenttraces\*')"
+            }
             return 1
         }
 
