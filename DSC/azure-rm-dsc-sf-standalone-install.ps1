@@ -24,6 +24,7 @@ param(
     [string]$subnetPrefix = "10",
     [int]$nodeTypeCount = 1,
     [string]$storageAccountName,
+    [string]$storageAccountKey,
     [int]$timeout = 1200
 )
 
@@ -51,9 +52,10 @@ function main() {
     log-info "current location: $currentLocation"
     log-info "nodeTypeCount: $nodeTypeCount"
     log-info "storageAccountName: $storageAccountName"
+    log-info "storageAccountKey: $storageAccountKey"
     log-info "configuration file: $configurationFileMod"
     log-info "bound params: $boundParams"
-    log-info "variables: `r`n$(get-variable | select Name,Value | ft -AutoSize * | out-string)"
+    log-info "variables: `r`n$(get-variable | Select-Object Name,Value | Format-Table -AutoSize * | out-string)"
 
     # verify and acl cert
     $cert = get-item Cert:\LocalMachine\My\$thumbprint
@@ -200,27 +202,7 @@ function main() {
     $json = $json.Replace("[Thumbprint]", $thumbprint)
     $json = $json.Replace("[IssuerCommonName]", $commonName)
     $json = $json.Replace("[CertificateCommonName]", $commonName)
-        
-    if ($diagnosticShare) {
-        $json = $json.Replace("c:\\ProgramData\\SF\\DiagnosticsStore", $diagnosticShare)
-    }
-    else {
-        log-info "creating diagnostic store"
-        md c:\diagnosticsStore
-        log-info "sharing diagnostic store"
-        log-info "icacls c:\diagnosticsStore /grant `"NT AUTHORITY\NETWORK SERVICE:(OI)(CI)(F)`""
-        icacls c:\diagnosticsStore /grant "NT AUTHORITY\NETWORK SERVICE:(OI)(CI)(F)"
-
-        log-info "net share diagnosticsStore=c:\diagnosticsStore /GRANT:everyone,FULL /GRANT:`"NT AUTHORITY\NETWORK SERVICE`",FULL"
-        net share diagnosticsStore=c:\diagnosticsStore /GRANT:everyone,FULL /GRANT:"NT AUTHORITY\NETWORK SERVICE",FULL
-
-        log-info "net share results: $(net share)"
-        #$share = "\\\\$((@((Resolve-DnsName $env:COMPUTERNAME).ipaddress) -imatch "$subnetPrefix\..+\..+\.")[0])\\diagnosticsStore"
-        $share = "\\\\$($env:COMPUTERNAME)\\diagnosticsStore"
-        log-info "new share $share"
-        $json = $json.Replace("c:\\ProgramData\\SF\\DiagnosticsStore", $share)
-    }
-
+    
     log-info "saving json: $configurationFileMod"
     Out-File -InputObject $json -FilePath $configurationFileMod -Force
     # add nodes to json
@@ -265,14 +247,14 @@ function main() {
         }
 
         $nodeObj = @{
-                nodeName      = $node
-                iPAddress     = (@((Resolve-DnsName $node).ipaddress) -imatch "$subnetPrefix\..+\..+\.")[0]
-                nodeTypeRef   = "NodeType$nodeTypeRef"
-                faultDomain   = "fd:/dc1/r$count"
-                upgradeDomain = "UD$count"
-            }
-        if($isSeedNode) {
-            $nodeObj.isSeedNode    = "True"
+            nodeName      = $node
+            iPAddress     = (@((Resolve-DnsName $node).ipaddress) -imatch "$subnetPrefix\..+\..+\.")[0]
+            nodeTypeRef   = "NodeType$nodeTypeRef"
+            faultDomain   = "fd:/dc1/r$count"
+            upgradeDomain = "UD$count"
+        }
+        if ($isSeedNode) {
+            $nodeObj.isSeedNode = "True"
         }
 
         [void]$nodeList.Add($nodeObj)
@@ -286,6 +268,32 @@ function main() {
 
     log-info "adding dns service"
     add-member -InputObject $json.properties -memberType NoteProperty -Name 'addonFeatures' -Value @('DnsService')
+
+    log-info "adding diagnosticsStore"
+    if ($storageAccountName) {
+        $json.properties.diagnosticsStore.storeType = 'AzureStorage'
+        $json.properties.diagnosticsStore.connectionString = "xstore:DefaultEndpointsProtocol=https;AccountName=$storageAccountName;AccountKey=$storageAccountKey"
+        $json.properties.addonFeatures = @('DnsService', 'EventStoreService')
+    }
+    elseif ($diagnosticShare) {
+        $json.properties.diagnosticsStore.connectionString = $diagnosticShare
+    }
+    else {
+        log-info "creating diagnostic store"
+        mkdir c:\diagnosticsStore
+        log-info "sharing diagnostic store"
+        log-info "icacls c:\diagnosticsStore /grant `"NT AUTHORITY\NETWORK SERVICE:(OI)(CI)(F)`""
+        icacls c:\diagnosticsStore /grant "NT AUTHORITY\NETWORK SERVICE:(OI)(CI)(F)"
+
+        log-info "net share diagnosticsStore=c:\diagnosticsStore /GRANT:everyone,FULL /GRANT:`"NT AUTHORITY\NETWORK SERVICE`",FULL"
+        net share diagnosticsStore=c:\diagnosticsStore /GRANT:everyone, FULL /GRANT:"NT AUTHORITY\NETWORK SERVICE", FULL
+
+        log-info "net share results: $(net share)"
+        #$share = "\\\\$((@((Resolve-DnsName $env:COMPUTERNAME).ipaddress) -imatch "$subnetPrefix\..+\..+\.")[0])\\diagnosticsStore"
+        $share = "\\\\$($env:COMPUTERNAME)\\diagnosticsStore"
+        log-info "new share $share"
+        $json.properties.diagnosticsStore.connectionString = $share
+    }
 
     $json.nodes = $nodeList.toarray()
     log-info "saving json with nodes"
@@ -327,7 +335,7 @@ function main() {
         #log-info $result 
 
         log-info "extracting standalonelogcollector"
-        md C:\temp\standalonelogcollector
+        mkdir C:\temp\standalonelogcollector
         Expand-Archive .\Tools\Microsoft.Azure.ServiceFabric.WindowsServer.SupportPackage.zip c:\temp\standalonelogcollector
     }
 

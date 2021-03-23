@@ -442,8 +442,7 @@
                 "sourceVaultValue": "[parameters('sourceVaultValue')]",
                 "certificateUrlValue": "[parameters('certificateUrlValue')]",
                 "virtualMachineCount": "[parameters('virtualMachineCount')]",
-                "nodeTypeCount": "[parameters('nodeTypeCount')]",
-                "storageAccountName": "[variables('diagnosticStorageAccountName')]"
+                "nodeTypeCount": "[parameters('nodeTypeCount')]"
               },
               "privacy": {
                 "dataCollection": "enable"
@@ -453,7 +452,9 @@
               "configurationArguments": {
                 "UserAccount": {
                   "userName": "[parameters('adminUserName')]",
-                  "password": "[parameters('adminPassword')]"
+                  "password": "[parameters('adminPassword')]",
+                  "storageAccountName": "[variables('diagnosticStorageAccountName')]",
+                  "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('diagnosticStorageAccountName')),'2015-05-01-preview').key1]"
                 }
               }
             }

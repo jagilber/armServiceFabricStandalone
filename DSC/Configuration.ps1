@@ -11,7 +11,8 @@ param(
     [string]$transcript,
     [string]$serviceFabricPackageUrl,
     [int]$nodeTypeCount = 1,
-    [string]$storageAccountName
+    [string]$storageAccountName,
+    [string]$storageAccountKey
 )
 
 [net.servicePointManager]::Expect100Continue = $true;
@@ -44,7 +45,8 @@ configuration SFStandaloneInstall
         [string]$transcript = ".\transcript.log",
         [string]$serviceFabricPackageUrl,
         [int]$nodeTypeCount,
-        [string]$storageAccountName
+        [string]$storageAccountName,
+        [string]$storageAccountKey
     )
     
     $ErrorActionPreference = "silentlycontinue"
@@ -111,6 +113,7 @@ configuration SFStandaloneInstall
                         + "-virtualMachineCount $using:virtualMachineCount " `
                         + "-nodeTypeCount $using:nodeTypeCount " `
                         + "-storageAccountName $using:storageAccountName " `
+                        + "-storageAccountKey $using:storageAccountKey " `
                         + "-commonName $using:commonName " `
                         + "-serviceFabricPackageUrl $using:serviceFabricPackageUrl " `
                         + "-sourceVaultValue $using:sourceVaultValue " `
@@ -149,6 +152,7 @@ if ($thumbprint -and $virtualMachineNamePrefix -and $commonName) {
         -virtualMachineCount $virtualMachineCount `
         -nodeTypeCount $nodeTypeCount `
         -storageAccountName $storageAccountName `
+        -storageAccountKey $storageAccountKey `
         -commonname $commonName `
         -serviceFabricPackageUrl $serviceFabricPackageUrl `
         -sourceVaultValue $sourceVaultValue `
