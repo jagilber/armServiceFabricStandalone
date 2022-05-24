@@ -199,6 +199,7 @@ function main() {
 
     log-info "modifying json"
     $json = Get-Content -Raw $configurationFile
+    $json = $json.Replace('"ThumbprintSecondary": "[Thumbprint]",','"ThumbprintSecondary": "",')
     $json = $json.Replace("[Thumbprint]", $thumbprint)
     $json = $json.Replace("[IssuerCommonName]", $commonName)
     $json = $json.Replace("[CertificateCommonName]", $commonName)
