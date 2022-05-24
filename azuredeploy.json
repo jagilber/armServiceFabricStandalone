@@ -60,14 +60,13 @@
     },
     "operatingSystem": {
       "type": "string",
-      "defaultValue": "Server2016",
+      "defaultValue": "Server2019",
       "metadata": {
         "description": "Operating System of the Server"
       },
       "allowedValues": [
-        "Server2012R2",
-        "Server2016",
-        "Server2019"
+        "Server2019",
+        "Server2022"
       ]
     },
     "serviceFabricPackageUrl": {
