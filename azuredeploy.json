@@ -106,7 +106,8 @@
         "Standard_DS2_v2",
         "Standard_DS3_v2",
         "Standard_DS4_v2",
-        "Standard_DS5_v2"
+        "Standard_DS5_v2",
+        "Standard_D4ads_v5"
       ],
       "metadata": {
         "description": "Virtual Machine Size"
@@ -116,20 +117,21 @@
   "variables": {
     "availabilitySetName": "sfsaAvailabilitySet",
     "dnsPrefixForPublicIP": "[resourceGroup().name]",
-    "lbApiVersion": "2015-06-15",
+    "lbApiVersion": "2022-11-01",
     "lbIDP": "[resourceId('Microsoft.Network/loadBalancers', concat('LBP-', parameters('dnsName')))]",
     "lbIPConfigP": "[concat(variables('lbIDP'),'/frontendIPConfigurations/LoadBalancerIPConfig')]",
     "lbPoolIDP": "[concat(variables('lbIDP'),'/backendAddressPools/LoadBalancerBEAddressPool')]",
     "lbProbeIDP": "[concat(variables('lbIDP'),'/probes/FabricGatewayProbe')]",
     "lbHttpProbeIDP": "[concat(variables('lbIDP'),'/probes/FabricHttpGatewayProbe')]",
     "lbNatPoolIDP": "[concat(variables('lbIDP'),'/inboundNatPools/LoadBalancerBEAddressNatPool')]",
-    "publicIPApiVersion": "2015-06-15",
+    "publicIPApiVersion": "2022-07-01",
     "vNETName": "sfsaVnet",
     "vNETPrefix": "10.0.0.0/16",
     "vNETSubnet1Name": "Subnet1",
     "vNETSubnet1Prefix": "10.0.0.0/24",
     "diagnosticStorageAccountName": "[concat('diagst', uniqueString(resourceGroup().id))]",
     "lbIPName": "[concat('LB-SF-SA-FE',parameters('dnsName'))]",
+    "networkSecurityGroupName": "SF-NSG",
     "operatingSystemValues": {
       "Server2012R2": {
         "PublisherValue": "MicrosoftWindowsServer",
@@ -145,6 +147,11 @@
         "PublisherValue": "MicrosoftWindowsServer",
         "OfferValue": "WindowsServer",
         "SkuValue": "2019-Datacenter-with-containers"
+      },
+      "Server2022": {
+        "PublisherValue": "MicrosoftWindowsServer",
+        "OfferValue": "WindowsServer",
+        "SkuValue": "2022-Datacenter"
       }
     },
     "availabilitySetPlatformFaultDomainCount": "2",
@@ -157,11 +164,14 @@
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[variables('lbIPName')]",
       "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard"
+      },
       "properties": {
         "dnsSettings": {
           "domainNameLabel": "[parameters('dnsName')]"
         },
-        "publicIPAllocationMethod": "Dynamic"
+        "publicIPAllocationMethod": "Static"
       },
       "tags": {
         "resourceType": "Service Fabric"
@@ -194,8 +204,12 @@
       "type": "Microsoft.Network/loadBalancers",
       "name": "[concat('LBP-', parameters('dnsName'))]",
       "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard"
+      },
       "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', variables('vNETName'))]"
+        "[concat('Microsoft.Network/virtualNetworks/', variables('vNETName'))]",
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('lbIPName'))]"
       ],
       "properties": {
         "frontendIPConfigurations": [
@@ -218,6 +232,7 @@
           {
             "name": "LBRule",
             "properties": {
+              "disableOutboundSnat": true,
               "backendAddressPool": {
                 "id": "[variables('lbPoolIDP')]"
               },
@@ -237,6 +252,7 @@
           {
             "name": "LBHttpRule",
             "properties": {
+              "disableOutboundSnat": true,
               "backendAddressPool": {
                 "id": "[variables('lbPoolIDP')]"
               },
@@ -274,6 +290,25 @@
             }
           }
         ],
+        "outboundRules": [
+          {
+            "name": "DefaultOutboundRule",
+            "properties": {
+              "allocatedOutboundPorts": 0,
+              "protocol": "All",
+              "enableTcpReset": true,
+              "idleTimeoutInMinutes": 4,
+              "backendAddressPool": {
+                "id": "[variables('lbPoolIDP')]"
+              },
+              "frontendIPConfigurations": [
+                {
+                  "id": "[variables('lbIPConfigP')]"
+                }
+              ]
+            }
+          }
+        ],
         "inboundNatPools": [
           {
             "name": "LoadBalancerBEAddressNatPool",
@@ -294,11 +329,71 @@
       }
     },
     {
+      "name": "[variables('networkSecurityGroupName')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2022-07-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "SF_AllowServiceFabricGatewayToLB",
+            "properties": {
+              "description": "Required rule to allow Azure Load Balancer to connect to the cluster. This rule cannot be overridden.",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "AzureLoadBalancer",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 501,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "SF_AllowServiceFabricGatewayPorts",
+            "properties": {
+              "description": "Optional rule to open SF cluster gateway ports. To override add a custom NSG rule for gateway ports in priority range 1000-3000.",
+              "protocol": "tcp",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 3002,
+              "direction": "Inbound",
+              "destinationPortRanges": [
+                "[parameters('fabricTcpGatewayPort')]",
+                "[parameters('fabricHttpGatewayPort')]"
+              ]
+            }
+          },
+          {
+            "name": "SF_AllowRdpPort",
+            "properties": {
+              "description": "Optional rule to open RDP ports. To override add a custom NSG rule for RDP port in priority range 1000-3000.",
+              "protocol": "tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 3003,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      },
+      "tags": {
+        "resourceType": "Service Fabric"
+      }
+    },
+    {
       "name": "[variables('vNETName')]",
       "type": "Microsoft.Network/virtualNetworks",
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-03-30",
-      "dependsOn": [],
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]"
+      ],
       "tags": {
         "displayName": "[variables('vNETName')]"
       },
@@ -312,7 +407,10 @@
           {
             "name": "[variables('vNETSubnet1Name')]",
             "properties": {
-              "addressPrefix": "[variables('vNETSubnet1Prefix')]"
+              "addressPrefix": "[variables('vNETSubnet1Prefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+              }
             }
           }
         ]

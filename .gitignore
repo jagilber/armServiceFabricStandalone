@@ -263,3 +263,9 @@ __pycache__/
 # armServiceFabricStandalone
 *.local.json
 *.local.ps1
+
+# Environment files with secrets
+.env
+
+# Azure deployment outputs
+deployment-output.json

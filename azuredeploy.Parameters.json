@@ -24,7 +24,7 @@
       "value": 1
     },
     "operatingSystem": {
-      "value": "Server2019"
+      "value": "Server2022"
     },
     "serviceFabricPackageUrl": {
       "value": "https://go.microsoft.com/fwlink/?LinkId=730690"
@@ -36,10 +36,10 @@
       "value": 5
     },
     "virtualMachineNamePrefix": {
-      "value": "nt"
+      "value": "nodetype"
     },
     "virtualMachineSize": {
-      "value": "Standard_DS2_v2"
+      "value": "Standard_D4ads_v5"
     }
   }
 }
