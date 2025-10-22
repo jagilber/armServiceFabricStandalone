@@ -23,8 +23,8 @@
     "nodeTypeCount": {
       "value": 1
     },
-    "operatingSystem": {
-      "value": "Server2022"
+    "vmImageSku": {
+      "value": "2022-Datacenter"
     },
     "serviceFabricPackageUrl": {
       "value": "https://go.microsoft.com/fwlink/?LinkId=730690"

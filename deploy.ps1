@@ -227,6 +227,9 @@ if ($env:DNS_NAME) {
 if ($env:VIRTUAL_MACHINE_COUNT) {
     $additionalParams.virtualMachineCount = [int]$env:VIRTUAL_MACHINE_COUNT
 }
+if ($env:VM_IMAGE_SKU) {
+    $additionalParams.vmImageSku = $env:VM_IMAGE_SKU
+}
 
 if ($additionalParams.Count -gt 0) {
     $deployParams.additionalParameters = $additionalParams
